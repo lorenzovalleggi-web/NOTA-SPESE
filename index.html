@@ -41,7 +41,7 @@
 
         /* TABELLE DATABASE E SINTESI */
         .db-container { overflow-x: auto; margin-top: 10px; border: 1px solid #ddd; border-radius: 6px; }
-        .db-table { width: 100%; border-collapse: collapse; min-width: 650px; font-size: 12px; }
+        .db-table { width: 100%; border-collapse: collapse; min-width: 700px; font-size: 12px; }
         .db-table th, .db-table td { border: 1px solid #ddd; padding: 6px; text-align: center; }
         .db-table th { background-color: #0056b3; color: white; }
         .db-table tr:nth-child(even) { background-color: #f9f9f9; }
@@ -50,7 +50,7 @@
         .filter-box div { flex: 1; }
         .summary-box { background: #e3f2fd; border: 1px solid #90caf9; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 13px; }
 
-        /* CONTENITORE DEDICATO CARICAMENTO MULTIPLO SCONTRINI */
+        /* CONTENITORE CARICAMENTO SCONTRINI */
         .scontrini-box { background: #f8f9fa; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; margin-bottom: 15px; }
     </style>
 </head>
@@ -63,7 +63,7 @@
     <div class="tabs">
         <button class="tab-button active" onclick="openTab(event, 'tab1')">1. Calcoli & Registrazione</button>
         <button class="tab-button" onclick="openTab(event, 'tab2')">2. Nota Spese (Registro)</button>
-        <button class="tab-button" onclick="openTab(event, 'tab3')">3. Scontrini (fino a 50)</button>
+        <button class="tab-button" onclick="openTab(event, 'tab3')">3. Scontrini</button>
         <button class="tab-button" onclick="openTab(event, 'tab4')">4. Telepass</button>
         <button class="tab-button" onclick="openTab(event, 'tab5')">5. Sintesi Referenti</button>
         <button class="tab-button" onclick="openTab(event, 'tab6')">6. Sintesi Scontrini</button>
@@ -172,7 +172,7 @@
         <button class="btn-main" id="btnSalva" onclick="salvaSpesa()">💾 Registra Spesa Giornaliera</button>
     </div>
 
-    <!-- SCHEDA 2: NOTA SPESE (REGISTRO GENERALE) -->
+    <!-- SCHEDA 2: NOTA SPESE (REGISTRO GENERALE CON CALCOLO 0,25 €/KM INCLUSO) -->
     <div id="tab2" class="tab-content">
         <div class="filter-box">
             <div>
@@ -213,7 +213,8 @@
                         <th>Ispettore</th>
                         <th>Comune</th>
                         <th>Referente</th>
-                        <th>Km (€)</th>
+                        <th>Km Percorsi</th>
+                        <th>Rimborso Km (€ 0.25)</th>
                         <th>Autostrade</th>
                         <th>Vitto</th>
                         <th>Varie</th>
@@ -226,13 +227,13 @@
         </div>
     </div>
 
-    <!-- SCHEDA 3: SCONTRINI -->
+    <!-- SCHEDA 3: SCONTRINI (Senza dicitura "fino a 50") -->
     <div id="tab3" class="tab-content">
-        <div class="section-title">Caricamento Foto / PDF Scontrini (Fino a 50 File)</div>
+        <div class="section-title">Caricamento Foto / PDF Scontrini</div>
         
         <div class="scontrini-box">
             <div class="form-group">
-                <label>Seleziona i file degli Scontrini/Ricevute (fino a 50 file):</label>
+                <label>Seleziona i file degli Scontrini/Ricevute:</label>
                 <input type="file" id="inputMultiScontrini" accept="image/*,.pdf" multiple onchange="gestisciCaricamentoScontrini()">
             </div>
             <small style="color:#6c757d;">💡 Suggerimento: tieni premuto SHIFT o CTRL (su PC) o seleziona più elementi dalla galleria del telefono.</small>
@@ -304,7 +305,7 @@
         <div class="section-title">Sintesi Cumulativa per Tipologia di Spesa</div>
         <div class="summary-box">
             <table class="db-table">
-                <tr><td>Totale Rimborsi Km:</td><td id="totCatKm">€ 0.00</td></tr>
+                <tr><td>Totale Rimborsi Km (0,25 €/Km):</td><td id="totCatKm">€ 0.00</td></tr>
                 <tr><td>Totale Autostrade:</td><td id="totCatAutostrade">€ 0.00</td></tr>
                 <tr><td>Totale Vitto:</td><td id="totCatVitto">€ 0.00</td></tr>
                 <tr><td>Totale Varie:</td><td id="totCatVarie">€ 0.00</td></tr>
@@ -515,15 +516,10 @@
         alert("Spesa registrata correttamente!");
     }
 
-    /* GESTIONE CARICAMENTO MULTIPLO SCONTRINI */
+    /* GESTIONE CARICAMENTO SCONTRINI */
     function gestisciCaricamentoScontrini() {
         const files = document.getElementById('inputMultiScontrini').files;
         if (files.length === 0) return;
-
-        if (files.length > 50) {
-            alert("Puoi caricare un massimo di 50 file contemporaneamente.");
-            return;
-        }
 
         let caricati = 0;
         for (let i = 0; i < files.length; i++) {
@@ -583,6 +579,7 @@
                 <td>${spesa.ispettore}</td>
                 <td>${spesa.comune}</td>
                 <td><small>${spesa.coordinatore}</small></td>
+                <td>${spesa.km} km</td>
                 <td>€ ${totKmEuro.toFixed(2)}</td>
                 <td>€ ${spesa.autostrade.toFixed(2)}</td>
                 <td>€ ${spesa.vitto.toFixed(2)}</td>
@@ -713,7 +710,7 @@
             return;
         }
 
-        let csv = "data:text/csv;charset=utf-8,Ispettore;Data;Comune;Referente;Km;Rimborso Km (€);Autostrade (€);Vitto (€);Varie (€);Totale (€)\n";
+        let csv = "data:text/csv;charset=utf-8,Ispettore;Data;Comune;Referente;Km;Rimborso Km (€ 0.25);Autostrade (€);Vitto (€);Varie (€);Totale (€)\n";
 
         spese.forEach(s => {
             const totKm = (s.km * 0.25).toFixed(2);
