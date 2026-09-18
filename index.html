@@ -76,17 +76,17 @@
     </div>
 
     <div class="form-group">
-        <label>Spese Autostrade (€):</label>
+        <label>Autostrade (€):</label>
         <input type="number" step="0.01" id="autostrade" placeholder="0.00" oninput="calcolaTotali()">
     </div>
 
     <div class="form-group">
-        <label>Spese Vitto (€):</label>
+        <label>Vitto (€):</label>
         <input type="number" step="0.01" id="vitto" placeholder="0.00" oninput="calcolaTotali()">
     </div>
 
     <div class="form-group">
-        <label>Spese Varie (€):</label>
+        <label>Varie (€):</label>
         <input type="number" step="0.01" id="varie" placeholder="0.00" oninput="calcolaTotali()">
     </div>
 
@@ -111,14 +111,14 @@
     <h3>Riepilogo Dettagliato Registrazioni</h3>
     <div id="listaSpese"></div>
 
-    <!-- RIEPILOGO TOTALE CUMULATIVO -->
+    <!-- RIEPILOGO TOTALE CUMULATIVO PER SINGOLA VOCE -->
     <div class="summary-box" id="boxTotaleMese" style="display:none;">
         <strong>TOTALE COMPLESSIVO CUMULATIVO:</strong>
         <table class="detail-table">
-            <tr><td>Tot. Rimborso Km:</td><td id="cumKm">€ 0.00</td></tr>
-            <tr><td>Tot. Autostrade:</td><td id="cumAutostrade">€ 0.00</td></tr>
-            <tr><td>Tot. Vitto:</td><td id="cumVitto">€ 0.00</td></tr>
-            <tr><td>Tot. Varie:</td><td id="cumVarie">€ 0.00</td></tr>
+            <tr><td>Rimborso Km:</td><td id="cumKm">€ 0.00</td></tr>
+            <tr><td>Autostrade:</td><td id="cumAutostrade">€ 0.00</td></tr>
+            <tr><td>Vitto:</td><td id="cumVitto">€ 0.00</td></tr>
+            <tr><td>Varie:</td><td id="cumVarie">€ 0.00</td></tr>
             <tr style="font-weight:bold; background-color:#bbdefb;"><td>TOTALE GENERALE:</td><td id="cumTotale">€ 0.00</td></tr>
         </table>
     </div>
@@ -221,7 +221,7 @@
         document.getElementById('cumTotale').innerText = "€ " + totaleGeneraleCum.toFixed(2);
         document.getElementById('boxTotaleMese').style.display = 'block';
 
-        // CREA SCHEDA CON TABELLA DETTAGLIATA
+        // CREA SCHEDA CON DETTAGLIO SPECIFICO
         const lista = document.getElementById('listaSpese');
         const card = document.createElement('div');
         card.className = 'card';
