@@ -12,6 +12,7 @@
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
         .calculated { background-color: #e9ecef; font-weight: bold; }
+        .highlight { background-color: #fff3cd; font-weight: bold; color: #856404; }
         canvas { border: 2px dashed #0056b3; border-radius: 4px; background: #fff; touch-action: none; display: block; width: 100%; height: 130px; box-sizing: border-box; }
         .btn-main { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-main:hover { background-color: #218838; }
@@ -67,7 +68,7 @@
     </div>
 
     <div class="form-group">
-        <label>Totale Rimborso Km (€ 0.25/km):</label>
+        <label>Totale Rimborso Chilometrico (€ 0.25/km):</label>
         <input type="text" id="totKmEuro" class="calculated" readonly value="€ 0.00">
     </div>
 
@@ -86,6 +87,12 @@
         <input type="number" step="0.01" id="varie" placeholder="0.00" oninput="calcolaTotali()">
     </div>
 
+    <!-- CAMPO TOTALE ALTRI RIMBORSI -->
+    <div class="form-group">
+        <label>TOTALE ALTRI RIMBORSI (Autostrade + Vitto + Varie):</label>
+        <input type="text" id="totAltriRimborsi" class="highlight" readonly value="€ 0.00">
+    </div>
+
     <div class="form-group">
         <label>Foto Scontrino / Ricevuta:</label>
         <input type="file" id="fotoScontrino" accept="image/*">
@@ -97,8 +104,9 @@
         <button type="button" class="btn-clear" onclick="pulisciFirma()">Cancella e Rifai Firma</button>
     </div>
 
+    <!-- TOTALE GENERALE DI GIORNATA -->
     <div class="form-group">
-        <label>TOTALE GIORNO (€):</label>
+        <label>TOTALE GENERALE GIORNO (€):</label>
         <input type="text" id="totaleGiorno" class="calculated" style="font-size: 18px; color: #d9534f;" readonly value="€ 0.00">
     </div>
 
@@ -116,9 +124,11 @@
         const varie = parseFloat(document.getElementById('varie').value) || 0;
 
         const totKm = km * 0.25;
-        const totaleGiorno = totKm + autostrade + vitto + varie;
+        const totAltri = autostrade + vitto + varie;
+        const totaleGiorno = totKm + totAltri;
 
         document.getElementById('totKmEuro').value = "€ " + totKm.toFixed(2);
+        document.getElementById('totAltriRimborsi').value = "€ " + totAltri.toFixed(2);
         document.getElementById('totaleGiorno').value = "€ " + totaleGiorno.toFixed(2);
     }
 
@@ -173,6 +183,8 @@
         const data = document.getElementById('dataSpesa').value;
         const comune = document.getElementById('comune').value;
         const coord = document.getElementById('coordinatore').value;
+        const totKm = document.getElementById('totKmEuro').value;
+        const totAltri = document.getElementById('totAltriRimborsi').value;
         const tot = document.getElementById('totaleGiorno').value;
         const firmaDataUrl = canvas.toDataURL();
 
@@ -186,13 +198,14 @@
         card.className = 'card';
         card.innerHTML = `
             <strong>${data}</strong> - ${comune} (${coord})<br>
-            Totale: <strong>${tot}</strong><br>
+            Rimb. Km: <strong>${totKm}</strong> | Altri Rimborsi: <strong>${totAltri}</strong><br>
+            Totale Giornaliero: <strong style="color:#d9534f;">${tot}</strong><br>
             <small>Firma allegata:</small><br>
             <img src="${firmaDataUrl}" class="signature-preview" alt="Firma">
         `;
         lista.appendChild(card);
 
-        alert("Spesa e Firma registrate con successo!");
+        alert("Spesa registrata con successo!");
     }
 </script>
 
