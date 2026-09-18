@@ -16,7 +16,7 @@
         nav.tab-nav button:hover { background-color: #415b76; }
         nav.tab-nav button.active { background-color: #3498db; color: #fff; border-bottom: 3px solid #fff; }
         
-        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .container { padding: 20px; max-width: 1300px; margin: 0 auto; }
         .tab-content { display: none; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .tab-content.active { display: block; }
         
@@ -26,10 +26,14 @@
         .form-row { display: flex; gap: 15px; flex-wrap: wrap; }
         .form-row .form-group { flex: 1; min-width: 200px; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        table th, table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        table th { background-color: #f8f9fa; color: #2c3e50; }
-        
+        .spese-box { background: #f8f9fa; border: 1px solid #e0e0e0; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .spese-box h3 { margin-top: 0; font-size: 16px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        table th, table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        table th { background-color: #f8f9fa; color: #2c3e50; font-weight: bold; }
+        .col-totale { background-color: #eaf2f8; font-weight: bold; }
+
         .btn { padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; display: inline-block; margin-top: 10px; }
         .btn-primary { background-color: #2ecc71; color: white; }
         .btn-primary:hover { background-color: #27ae60; }
@@ -65,6 +69,8 @@
         <div id="calcoli" class="tab-content active">
             <h2>Inserimento Spesa Giornaliera</h2>
             <form id="formSpesa" onsubmit="salvaSpesa(event)">
+                
+                <!-- SEZIONE ANAGRAFICA -->
                 <div class="form-row">
                     <div class="form-group">
                         <label>Data</label>
@@ -87,50 +93,56 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Luogo di Residenza Ispettore</label>
+                        <label>Residenza Ispettore (Luogo di partenza)</label>
                         <input type="text" id="spesaResidenzaIspettore" placeholder="Es. Bologna, Milano..." required>
                     </div>
-                </div>
-
-                <div class="form-row">
                     <div class="form-group">
                         <label>Comune Destinazione (Luogo di lavoro)</label>
                         <input type="text" id="spesaComune" placeholder="Es. Rimini, Cesena..." required>
                     </div>
-                    <div class="form-group">
-                        <label>Categoria Spesa</label>
-                        <select id="spesaCategoria" onchange="gestisciCategoria()">
-                            <option value="Km">Chilometri (0,25 €/Km)</option>
-                            <option value="Autostrada">Autostrada</option>
-                            <option value="Vitto">Vitto</option>
-                            <option value="Varie">Varie</option>
-                        </select>
+                </div>
+
+                <!-- SEZIONE CATEGORIE DI SPESA CON IMPORTI -->
+                <div class="spese-box">
+                    <h3>Importi per Singola Voce</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Km Percorsi (0,25 €/Km)</label>
+                            <input type="number" id="spesaKm" placeholder="0" oninput="calcolaTotaleGiorno()">
+                            <small id="rimborsoKmLabel" style="color: #666; font-weight: bold;">Importo Km: € 0.00</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Importo Autostrada (€)</label>
+                            <input type="number" step="0.01" id="spesaAutostrada" placeholder="0.00" oninput="calcolaTotaleGiorno()">
+                        </div>
+                        <div class="form-group">
+                            <label>Importo Vitto (€)</label>
+                            <input type="number" step="0.01" id="spesaVitto" placeholder="0.00" oninput="calcolaTotaleGiorno()">
+                        </div>
+                        <div class="form-group">
+                            <label>Importo Varie (€)</label>
+                            <input type="number" step="0.01" id="spesaVarie" placeholder="0.00" oninput="calcolaTotaleGiorno()">
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group" id="groupKm">
-                        <label>Km Percorsi Giornalieri</label>
-                        <input type="number" id="spesaKm" placeholder="0" oninput="calcolaRimborsoKm()">
-                    </div>
-                    <div class="form-group">
-                        <label>Importo Spesa / Rimborso (€)</label>
-                        <input type="number" step="0.01" id="spesaImporto" placeholder="0.00" required>
-                    </div>
-                </div>
-
+                <!-- TOTALE E ALLEGATO -->
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Allega File Firma Digitale / Scontrino (Immagine o PDF)</label>
+                        <label>TOTALE GIORNALIERO (€)</label>
+                        <input type="number" step="0.01" id="spesaTotaleGiorno" placeholder="0.00" readonly style="background-color: #e9ecef; font-weight: bold; font-size: 16px; color: #2c3e50;">
+                    </div>
+                    <div class="form-group">
+                        <label>Allega File / Documento (Immagine o PDF)</label>
                         <input type="file" id="spesaFirmaFile" accept="image/*,application/pdf">
                     </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary">➕ Salva e Registra Spesa</button>
+                <button type="submit" class="btn btn-primary">➕ Salva e Registra Giornata</button>
             </form>
         </div>
 
-        <!-- TAB 2: REGISTRO -->
+        <!-- TAB 2: REGISTRO CON VOCI SEPARATE E TOTALE -->
         <div id="registro" class="tab-content">
             <h2>Elenco Spese Registrate</h2>
             <table>
@@ -138,11 +150,13 @@
                     <tr>
                         <th>Data</th>
                         <th>Coordinatore</th>
-                        <th>Residenza Ispettore</th>
-                        <th>Comune Destinazione</th>
-                        <th>Categoria</th>
-                        <th>Km</th>
-                        <th>Importo (€)</th>
+                        <th>Residenza</th>
+                        <th>Destinazione</th>
+                        <th>Imp. Km (€)</th>
+                        <th>Imp. Autostrada (€)</th>
+                        <th>Imp. Vitto (€)</th>
+                        <th>Imp. Varie (€)</th>
+                        <th class="col-totale">TOTALE (€)</th>
                         <th>Azioni</th>
                     </tr>
                 </thead>
@@ -163,8 +177,8 @@
                 <thead>
                     <tr>
                         <th>Data</th>
-                        <th>Comune / Tratta</th>
-                        <th>Importo (€)</th>
+                        <th>Destinazione</th>
+                        <th>Importo Autostrada (€)</th>
                     </tr>
                 </thead>
                 <tbody id="bodyTelepass"></tbody>
@@ -212,29 +226,17 @@
             if (tabId === 'sintesi') renderSintesi();
         }
 
-        function calcolaRimborsoKm() {
-            const cat = document.getElementById('spesaCategoria').value;
-            if (cat === 'Km') {
-                const km = parseFloat(document.getElementById('spesaKm').value) || 0;
-                document.getElementById('spesaImporto').value = (km * 0.25).toFixed(2);
-            }
-        }
+        function calcolaTotaleGiorno() {
+            const km = parseFloat(document.getElementById('spesaKm').value) || 0;
+            const rimborsoKm = km * 0.25;
+            document.getElementById('rimborsoKmLabel').innerText = `Importo Km: € ${rimborsoKm.toFixed(2)}`;
 
-        function gestisciCategoria() {
-            const cat = document.getElementById('spesaCategoria').value;
-            const inputKm = document.getElementById('spesaKm');
-            const inputImporto = document.getElementById('spesaImporto');
+            const autostrada = parseFloat(document.getElementById('spesaAutostrada').value) || 0;
+            const vitto = parseFloat(document.getElementById('spesaVitto').value) || 0;
+            const varie = parseFloat(document.getElementById('spesaVarie').value) || 0;
 
-            if (cat === 'Km') {
-                inputKm.disabled = false;
-                inputImporto.readOnly = true;
-                calcolaRimborsoKm();
-            } else {
-                inputKm.value = '';
-                inputKm.disabled = true;
-                inputImporto.readOnly = false;
-                inputImporto.value = '';
-            }
+            const totale = rimborsoKm + autostrada + vitto + varie;
+            document.getElementById('spesaTotaleGiorno').value = totale.toFixed(2);
         }
 
         function salvaSpesa(e) {
@@ -254,16 +256,25 @@
         }
 
         function creaEInserisciSpesa(firmaObj) {
-            const cat = document.getElementById('spesaCategoria').value;
+            const km = parseFloat(document.getElementById('spesaKm').value) || 0;
+            const rimborsoKm = km * 0.25;
+            const autostrada = parseFloat(document.getElementById('spesaAutostrada').value) || 0;
+            const vitto = parseFloat(document.getElementById('spesaVitto').value) || 0;
+            const varie = parseFloat(document.getElementById('spesaVarie').value) || 0;
+            const totale = rimborsoKm + autostrada + vitto + varie;
+
             const nuovaSpesa = {
                 id: Date.now().toString(),
                 data: document.getElementById('spesaData').value,
                 coordinatore: document.getElementById('spesaCoordinatore').value,
                 residenzaIspettore: document.getElementById('spesaResidenzaIspettore').value,
                 comune: document.getElementById('spesaComune').value,
-                categoria: cat,
-                km: cat === 'Km' ? (parseFloat(document.getElementById('spesaKm').value) || 0) : 0,
-                importo: parseFloat(document.getElementById('spesaImporto').value) || 0,
+                km: km,
+                rimborsoKm: rimborsoKm,
+                autostrada: autostrada,
+                vitto: vitto,
+                varie: varie,
+                totale: totale,
                 firma: firmaObj
             };
 
@@ -272,14 +283,14 @@
             
             alert('Spesa salvata con successo!');
             document.getElementById('formSpesa').reset();
-            gestisciCategoria();
+            document.getElementById('rimborsoKmLabel').innerText = 'Importo Km: € 0.00';
         }
 
         function renderRegistro() {
             const tbody = document.getElementById('bodyTabellaSpese');
             tbody.innerHTML = '';
             if (speseRegistrate.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Nessuna spesa registrata.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Nessuna spesa registrata.</td></tr>';
                 return;
             }
             speseRegistrate.forEach(s => {
@@ -289,9 +300,11 @@
                         <td>${s.coordinatore}</td>
                         <td>${s.residenzaIspettore || '-'}</td>
                         <td>${s.comune}</td>
-                        <td>${s.categoria}</td>
-                        <td>${s.km ? s.km + ' Km' : '-'}</td>
-                        <td>€ ${s.importo.toFixed(2)}</td>
+                        <td>€ ${(s.rimborsoKm || 0).toFixed(2)} <br><small style="color:#777;">(${s.km} Km)</small></td>
+                        <td>€ ${(s.autostrada || 0).toFixed(2)}</td>
+                        <td>€ ${(s.vitto || 0).toFixed(2)}</td>
+                        <td>€ ${(s.varie || 0).toFixed(2)}</td>
+                        <td class="col-totale">€ ${(s.totale || 0).toFixed(2)}</td>
                         <td><button class="btn btn-danger" style="padding: 4px 8px; font-size:12px; margin:0;" onclick="eliminaSpesa('${s.id}')">Elimina</button></td>
                     </tr>`;
             });
@@ -303,16 +316,16 @@
             const speseConFirma = speseRegistrate.filter(s => s.firma);
 
             if (speseConFirma.length === 0) {
-                griglia.innerHTML = '<p style="color:#666;">Nessun file firma registrato.</p>';
+                griglia.innerHTML = '<p style="color:#666;">Nessun allegato registrato.</p>';
                 return;
             }
 
             speseConFirma.forEach(s => {
                 griglia.innerHTML += `
                     <div class="scontrino-card">
-                        <strong>Comune: ${s.comune}</strong><br>
+                        <strong>Destinazione: ${s.comune}</strong><br>
                         <small>${s.coordinatore} - ${s.data}</small><br>
-                        <small>Importo: € ${s.importo.toFixed(2)}</small><br><br>
+                        <small>Totale: € ${s.totale.toFixed(2)}</small><br><br>
                         <button class="btn btn-secondary" onclick="apriAnteprima('${s.id}')">Visualizza Documento</button>
                     </div>`;
             });
@@ -321,13 +334,13 @@
         function renderTelepass() {
             const tbody = document.getElementById('bodyTelepass');
             tbody.innerHTML = '';
-            const telepassSpese = speseRegistrate.filter(s => s.categoria === 'Autostrada');
+            const telepassSpese = speseRegistrate.filter(s => s.autostrada > 0);
             if (telepassSpese.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nessun pedaggio registrato.</td></tr>';
                 return;
             }
             telepassSpese.forEach(s => {
-                tbody.innerHTML += `<tr><td>${s.data}</td><td>${s.comune}</td><td>€ ${s.importo.toFixed(2)}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${s.data}</td><td>${s.comune}</td><td>€ ${s.autostrada.toFixed(2)}</td></tr>`;
             });
         }
 
@@ -335,7 +348,7 @@
             const cont = document.getElementById('sintesiReferentiContenitore');
             const refTot = {};
             speseRegistrate.forEach(s => {
-                refTot[s.coordinatore] = (refTot[s.coordinatore] || 0) + s.importo;
+                refTot[s.coordinatore] = (refTot[s.coordinatore] || 0) + s.totale;
             });
             let html = '<ul>';
             for (let ref in refTot) {
@@ -347,16 +360,23 @@
 
         function renderSintesi() {
             const cont = document.getElementById('sintesiCategorieContenitore');
-            const catTot = {};
+            let totKm = 0, totAutostrada = 0, totVitto = 0, totVarie = 0;
+
             speseRegistrate.forEach(s => {
-                catTot[s.categoria] = (catTot[s.categoria] || 0) + s.importo;
+                totKm += (s.rimborsoKm || 0);
+                totAutostrada += (s.autostrada || 0);
+                totVitto += (s.vitto || 0);
+                totVarie += (s.varie || 0);
             });
-            let html = '<ul>';
-            for (let cat in catTot) {
-                html += `<li><strong>${cat}:</strong> € ${catTot[cat].toFixed(2)}</li>`;
-            }
-            html += '</ul>';
-            cont.innerHTML = Object.keys(catTot).length > 0 ? html : '<p>Nessun dato disponibile.</p>';
+
+            let html = `
+                <ul>
+                    <li><strong>Totale Rimborso Km:</strong> € ${totKm.toFixed(2)}</li>
+                    <li><strong>Totale Autostrada:</strong> € ${totAutostrada.toFixed(2)}</li>
+                    <li><strong>Totale Vitto:</strong> € ${totVitto.toFixed(2)}</li>
+                    <li><strong>Totale Varie:</strong> € ${totVarie.toFixed(2)}</li>
+                </ul>`;
+            cont.innerHTML = speseRegistrate.length > 0 ? html : '<p>Nessun dato disponibile.</p>';
         }
 
         function eliminaSpesa(id) {
@@ -381,9 +401,8 @@
             document.getElementById('modalAnteprima').style.display = 'none';
         }
 
-        // Inizializzazione pagina
+        // Inizializzazione data odierna
         document.getElementById('dataOggi').innerText = new Date().toLocaleDateString('it-IT');
-        gestisciCategoria();
     </script>
 </body>
 </html>
