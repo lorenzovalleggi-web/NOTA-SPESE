@@ -6,27 +6,38 @@
     <title>Gestione Nota Spese</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f6f9; color: #333; }
-        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h2, h3 { text-align: center; color: #0056b3; margin-top: 0; }
         .form-group { margin-bottom: 12px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
         .calculated { background-color: #e9ecef; font-weight: bold; }
         canvas { border: 2px dashed #0056b3; border-radius: 4px; background: #fff; touch-action: none; display: block; width: 100%; height: 130px; box-sizing: border-box; }
+        
+        /* PULSANTI */
         .btn-main { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-main:hover { background-color: #218838; }
         .btn-clear { background-color: #6c757d; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; margin-top: 5px; }
         .btn-save-sig { background-color: #0d6efd; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; margin-top: 5px; }
-        .btn-edit { background-color: #ffc107; color: #212529; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; margin-right: 5px; }
-        .btn-delete { background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
-        .card { background: #f8f9fa; border: 1px solid #cce5ff; padding: 12px; margin-top: 12px; border-radius: 6px; }
-        .detail-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
-        .detail-table th, .detail-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
-        .detail-table th { background-color: #e9ecef; }
+        .btn-edit { background-color: #ffc107; color: #212529; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .btn-delete { background-color: #dc3545; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
+        .btn-export { background-color: #17a2b8; color: white; padding: 10px; border: none; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+
+        /* SEZIONE FIRMA E TABELLE */
         .signature-box { background: #eef6ff; padding: 12px; border-radius: 6px; border: 1px solid #b6d4fe; margin-bottom: 15px; }
-        .signature-preview { max-width: 140px; height: auto; border: 1px solid #ccc; margin-top: 5px; display: block; background: #fff; padding: 3px; }
+        .signature-preview { max-width: 120px; height: auto; border: 1px solid #ccc; background: #fff; padding: 2px; }
         .summary-box { background: #e3f2fd; border: 1px solid #90caf9; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 14px; }
-        .card-actions { margin-top: 10px; text-align: right; }
+        
+        /* DATABASE TABLE STYLE */
+        .db-container { overflow-x: auto; margin-top: 15px; border: 1px solid #ddd; border-radius: 6px; }
+        .db-table { width: 100%; border-collapse: collapse; min-width: 600px; font-size: 13px; }
+        .db-table th, .db-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .db-table th { background-color: #0056b3; color: white; position: sticky; top: 0; }
+        .db-table tr:nth-child(even) { background-color: #f9f9f9; }
+        .db-table tr:hover { background-color: #f1f1f1; }
+        
+        .filter-box { display: flex; gap: 10px; margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+        .filter-box div { flex: 1; }
     </style>
 </head>
 <body>
@@ -44,21 +55,20 @@
         <input type="text" id="residenza" value="PISA">
     </div>
 
-    <!-- SEZIONE FIRMA SALVATA -->
+    <!-- FIRMA SALVATA -->
     <div class="signature-box">
         <label>Firma del Dichiarante:</label>
-        
         <div id="sezioneFirmaEsistente" style="display:none;">
             <small style="color:#28a745; font-weight:bold;">✓ Firma memorizzata nel dispositivo</small>
             <img id="imgFirmaSalvata" class="signature-preview" alt="Firma Salvata">
-            <button type="button" class="btn-clear" onclick="abilitaModificaFirma()">Cambia / Rifai Firma</button>
+            <button type="button" class="btn-clear" onclick="abilitaModificaFirma()">Cambia Firma</button>
         </div>
 
         <div id="sezioneNuovaFirma">
-            <small style="color:#6c757d;">Firma nel riquadro sottostante (verrà salvata per i prossimi utilizzi):</small>
+            <small style="color:#6c757d;">Firma nel riquadro per salvarla:</small>
             <canvas id="firmaCanvas" width="400" height="130"></canvas>
             <button type="button" class="btn-clear" onclick="pulisciFirma()">Cancella</button>
-            <button type="button" class="btn-save-sig" onclick="salvaFirmaInMemoria()">Salva Questa Firma</button>
+            <button type="button" class="btn-save-sig" onclick="salvaFirmaInMemoria()">Salva Firma</button>
         </div>
     </div>
 
@@ -114,27 +124,59 @@
     </div>
 
     <div class="form-group">
-        <label>Foto Scontrino / Ricevuta:</label>
-        <input type="file" id="fotoScontrino" accept="image/*">
-    </div>
-
-    <div class="form-group">
         <label>TOTALE GENERALE GIORNO (€):</label>
         <input type="text" id="totaleGiorno" class="calculated" style="font-size: 18px; color: #d9534f;" readonly value="€ 0.00">
     </div>
 
-    <button class="btn-main" id="btnSalva" onclick="salvaSpesa()">Salva Nota Spesa</button>
+    <button class="btn-main" id="btnSalva" onclick="salvaSpesa()">Salva Registrazione Giorno</button>
 
-    <h3>Riepilogo Dettagliato Registrazioni</h3>
-    <div id="listaSpese"></div>
+    <hr style="border: 0; border-top: 2px solid #0056b3; margin: 25px 0 10px 0;">
 
+    <!-- SEZIONE DATABASE TABELLARE -->
+    <h3>📊 Database Spese Giornaliere</h3>
+    
+    <div class="filter-box">
+        <div>
+            <label>Filtra per Mese:</label>
+            <input type="month" id="filtroMese" onchange="renderDatabase()">
+        </div>
+        <div>
+            <label>Cerca Comune:</label>
+            <input type="text" id="filtroComune" placeholder="Es. Milano..." oninput="renderDatabase()">
+        </div>
+    </div>
+
+    <button class="btn-export" onclick="esportaExcelCSV()">📥 Esporta Database per Excel (.CSV)</button>
+
+    <div class="db-container">
+        <table class="db-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Comune</th>
+                    <th>Coordinatore</th>
+                    <th>Km (€)</th>
+                    <th>Autostrade</th>
+                    <th>Vitto</th>
+                    <th>Varie</th>
+                    <th>Totale Giorno</th>
+                    <th>Azione</th>
+                </tr>
+            </thead>
+            <tbody id="dbTbody">
+                <!-- I dati vengono inseriti in automatico qui -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- RIEPILOGO TOTALE CUMULATIVO -->
     <div class="summary-box" id="boxTotaleMese">
-        <strong>TOTALE COMPLESSIVO CUMULATIVO:</strong>
-        <table class="detail-table">
-            <tr><td>Rimborso Km:</td><td id="cumKm">€ 0.00</td></tr>
-            <tr><td>Autostrade:</td><td id="cumAutostrade">€ 0.00</td></tr>
-            <tr><td>Vitto:</td><td id="cumVitto">€ 0.00</td></tr>
-            <tr><td>Varie:</td><td id="cumVarie">€ 0.00</td></tr>
+        <strong>TOTALE COMPLESSIVO VISUALIZZATO:</strong>
+        <table class="db-table" style="margin-top:8px;">
+            <tr><td>Tot. Rimborso Km:</td><td id="cumKm">€ 0.00</td></tr>
+            <tr><td>Tot. Autostrade:</td><td id="cumAutostrade">€ 0.00</td></tr>
+            <tr><td>Tot. Vitto:</td><td id="cumVitto">€ 0.00</td></tr>
+            <tr><td>Tot. Varie:</td><td id="cumVarie">€ 0.00</td></tr>
             <tr style="font-weight:bold; background-color:#bbdefb;"><td>TOTALE GENERALE:</td><td id="cumTotale">€ 0.00</td></tr>
         </table>
     </div>
@@ -151,7 +193,7 @@
 
     window.onload = function() {
         caricaFirmaSalvata();
-        renderSpese();
+        renderDatabase();
     };
 
     function caricaFirmaSalvata() {
@@ -174,7 +216,7 @@
         const firmaDataUrl = canvas.toDataURL();
         localStorage.setItem('notaSpeseFirma', firmaDataUrl);
         caricaFirmaSalvata();
-        alert("Firma salvata con successo!");
+        alert("Firma salvata!");
     }
 
     function abilitaModificaFirma() {
@@ -283,15 +325,18 @@
             const index = elencoSpese.findIndex(item => item.id === editId);
             if (index !== -1) elencoSpese[index] = spesaOggetto;
             editId = null;
-            document.getElementById('btnSalva').innerText = "Salva Nota Spesa";
+            document.getElementById('btnSalva').innerText = "Salva Registrazione Giorno";
             document.getElementById('btnSalva').style.backgroundColor = "#28a745";
         } else {
             elencoSpese.push(spesaOggetto);
         }
 
+        // Ordina per data decrescente
+        elencoSpese.sort((a, b) => new Date(b.data) - new Date(a.data));
+
         localStorage.setItem('elencoNotaSpese', JSON.stringify(elencoSpese));
         
-        // Reset Form
+        // Reset campi
         document.getElementById('dataSpesa').value = '';
         document.getElementById('comune').value = '';
         document.getElementById('km').value = '';
@@ -300,20 +345,29 @@
         document.getElementById('varie').value = '';
         calcolaTotali();
 
-        renderSpese();
-        alert("Nota Spesa salvata correttamente!");
+        renderDatabase();
+        alert("Spesa registrata correttamente nel Database!");
     }
 
-    function renderSpese() {
-        const lista = document.getElementById('listaSpese');
-        lista.innerHTML = '';
+    function renderDatabase() {
+        const tbody = document.getElementById('dbTbody');
+        tbody.innerHTML = '';
+
+        const filtroMese = document.getElementById('filtroMese').value;
+        const filtroComune = document.getElementById('filtroComune').value.toLowerCase();
 
         let totKmCum = 0;
         let totAutostradeCum = 0;
         let totVittoCum = 0;
         let totVarieCum = 0;
 
-        elencoSpese.forEach(spesa => {
+        const speseFiltrate = elencoSpese.filter(spesa => {
+            const matchMese = filtroMese ? spesa.data.startsWith(filtroMese) : true;
+            const matchComune = filtroComune ? spesa.comune.toLowerCase().includes(filtroComune) : true;
+            return matchMese && matchComune;
+        });
+
+        speseFiltrate.forEach(spesa => {
             const totKmEuro = spesa.km * 0.25;
             const totGiorno = totKmEuro + spesa.autostrade + spesa.vitto + spesa.varie;
 
@@ -322,26 +376,22 @@
             totVittoCum += spesa.vitto;
             totVarieCum += spesa.varie;
 
-            const card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML = `
-                <strong>${spesa.data}</strong> - ${spesa.comune} <br><small>(${spesa.coordinatore})</small>
-                <table class="detail-table">
-                    <tr><th>Voce Spesa</th><th>Importo</th></tr>
-                    <tr><td>Rimborso Km (${spesa.km} km × € 0.25)</td><td>€ ${totKmEuro.toFixed(2)}</td></tr>
-                    <tr><td>Autostrade</td><td>€ ${spesa.autostrade.toFixed(2)}</td></tr>
-                    <tr><td>Vitto</td><td>€ ${spesa.vitto.toFixed(2)}</td></tr>
-                    <tr><td>Varie</td><td>€ ${spesa.varie.toFixed(2)}</td></tr>
-                    <tr style="font-weight:bold; background-color:#e2e3e5;"><td>TOTALE GIORNO</td><td style="color:#d9534f;">€ ${totGiorno.toFixed(2)}</td></tr>
-                </table>
-                <small style="margin-top:5px; display:block;">Firma allegata:</small>
-                <img src="${spesa.firma}" class="signature-preview" alt="Firma">
-                <div class="card-actions">
-                    <button class="btn-edit" onclick="modificaSpesa(${spesa.id})">✏️ Modifica</button>
-                    <button class="btn-delete" onclick="eliminaSpesa(${spesa.id})">🗑️ Elimina</button>
-                </div>
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${spesa.data}</strong></td>
+                <td>${spesa.comune}</td>
+                <td><small>${spesa.coordinatore}</small></td>
+                <td>€ ${totKmEuro.toFixed(2)}<br><small>(${spesa.km} km)</small></td>
+                <td>€ ${spesa.autostrade.toFixed(2)}</td>
+                <td>€ ${spesa.vitto.toFixed(2)}</td>
+                <td>€ ${spesa.varie.toFixed(2)}</td>
+                <td style="font-weight:bold; color:#d9534f;">€ ${totGiorno.toFixed(2)}</td>
+                <td>
+                    <button class="btn-edit" onclick="modificaSpesa(${spesa.id})">✏️</button>
+                    <button class="btn-delete" onclick="eliminaSpesa(${spesa.id})">🗑️</button>
+                </td>
             `;
-            lista.appendChild(card);
+            tbody.appendChild(tr);
         });
 
         const totGeneraleCum = totKmCum + totAutostradeCum + totVittoCum + totVarieCum;
@@ -368,7 +418,7 @@
 
         editId = id;
         const btnSalva = document.getElementById('btnSalva');
-        btnSalva.innerText = "Aggiorna Nota Spesa";
+        btnSalva.innerText = "Aggiorna Spesa Selezionata";
         btnSalva.style.backgroundColor = "#ffc107";
         btnSalva.style.color = "#212529";
 
@@ -376,11 +426,34 @@
     }
 
     function eliminaSpesa(id) {
-        if (confirm("Sei sicuro di voler eliminare questa registrazione?")) {
+        if (confirm("Sei sicuro di voler eliminare questa riga dal Database?")) {
             elencoSpese = elencoSpese.filter(item => item.id !== id);
             localStorage.setItem('elencoNotaSpese', JSON.stringify(elencoSpese));
-            renderSpese();
+            renderDatabase();
         }
+    }
+
+    function esportaExcelCSV() {
+        if (elencoSpese.length === 0) {
+            alert("Nessun dato da esportare!");
+            return;
+        }
+
+        let csvContent = "data:text/csv;charset=utf-8,Data;Comune;Coordinatore;Km;Rimborso Km (€);Autostrade (€);Vitto (€);Varie (€);Totale Giorno (€)\n";
+
+        elencoSpese.forEach(spesa => {
+            const totKmEuro = (spesa.km * 0.25).toFixed(2);
+            const totGiorno = (parseFloat(totKmEuro) + spesa.autostrade + spesa.vitto + spesa.varie).toFixed(2);
+            csvContent += `${spesa.data};${spesa.comune};${spesa.coordinatore};${spesa.km};${totKmEuro};${spesa.autostrade};${spesa.vitto};${spesa.varie};${totGiorno}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "Database_Nota_Spese.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 </script>
 
