@@ -34,7 +34,7 @@
         .spese-box { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
         .spese-box h3 { margin-top: 0; font-size: 16px; color: #1e293b; border-bottom: 2px solid #2563eb; padding-bottom: 5px; }
 
-        .filter-bar { background-color: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap; }
+        .filter-bar { background-color: #f1f5f9; padding: 15px; border-radius: 6px; margin-bottom: 20px; display: flex; gap: 15px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         table th, table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
@@ -115,27 +115,14 @@
             <form id="formSpesa" onsubmit="salvaSpesa(event)">
                 <input type="hidden" id="spesaEditId" value="">
 
-                <!-- SEZIONE PERIODO & ANAGRAFICA -->
+                <!-- SEZIONE ANAGRAFICA E DATA -->
                 <div class="spese-box">
-                    <h3>Data e Periodo Uscita</h3>
+                    <h3>Data e Dettagli Uscita</h3>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Data dell'Uscita</label>
-                            <input type="date" id="spesaData" required onchange="aggiornaSettimanaDaData(this.value)">
+                            <input type="date" id="spesaData" required>
                         </div>
-                        <div class="form-group">
-                            <label>Settimana del Mese</label>
-                            <select id="spesaSettimana" required>
-                                <option value="Settimana 1">Settimana 1 (gg 1-7)</option>
-                                <option value="Settimana 2">Settimana 2 (gg 8-14)</option>
-                                <option value="Settimana 3">Settimana 3 (gg 15-21)</option>
-                                <option value="Settimana 4">Settimana 4 (gg 22-28)</option>
-                                <option value="Settimana 5">Settimana 5 (Fine Mese)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
                         <div class="form-group">
                             <label>Coordinatore / Referente</label>
                             <select id="spesaCoordinatore" required>
@@ -152,6 +139,9 @@
                                 <option value="Coordinatore Vendemini">Coordinatore Vendemini</option>
                             </select>
                         </div>
+                    </div>
+
+                    <div class="form-row">
                         <div class="form-group">
                             <label>Residenza Ispettore</label>
                             <input type="text" id="spesaResidenzaIspettore" placeholder="Es. Bologna..." required>
@@ -212,24 +202,14 @@
         <div id="registro" class="tab-content">
             <h2 id="titoloRegistroNS">Registro Spese</h2>
 
-            <!-- FILTRO PER SETTIMANA -->
+            <!-- BARRA AZIONI REGISTRO -->
             <div class="filter-bar">
-                <div style="flex:1; min-width: 200px;">
-                    <label style="font-weight:bold; font-size:13px;">Filtra Settimana per Invio al Coordinatore:</label>
-                    <select id="filtroSettimana" onchange="renderRegistro()" style="padding:8px; width:100%; margin-top:4px; border-radius:4px; border:1px solid #ccc;">
-                        <option value="TUTTE">Tutte le Settimane (Vista Mese Completo)</option>
-                        <option value="Settimana 1">Settimana 1</option>
-                        <option value="Settimana 2">Settimana 2</option>
-                        <option value="Settimana 3">Settimana 3</option>
-                        <option value="Settimana 4">Settimana 4</option>
-                        <option value="Settimana 5">Settimana 5</option>
-                    </select>
-                </div>
-
                 <div>
-                    <label style="display:block; visibility:hidden; font-size:13px;">Azioni</label>
-                    <button class="btn btn-info" onclick="window.print()" style="margin-top:4px;">🖨️ Stampa / PDF Settimanale</button>
-                    <button class="btn btn-warning" onclick="inviaReportEmail()" style="margin-top:4px;">✉️ Invia Settimana al Coordinatore</button>
+                    <strong>Riepilogo Totale Nota Spese</strong>
+                </div>
+                <div>
+                    <button class="btn btn-info" onclick="window.print()">🖨️ Stampa / Salva PDF</button>
+                    <button class="btn btn-warning" onclick="inviaReportEmail()">✉️ Invia Report per Email</button>
                 </div>
             </div>
 
@@ -237,7 +217,6 @@
                 <thead>
                     <tr>
                         <th>Data</th>
-                        <th>Settimana</th>
                         <th>Coordinatore</th>
                         <th>Destinazione</th>
                         <th>Tot. KM</th>
@@ -252,7 +231,7 @@
                 <tbody id="bodyTabellaSpese"></tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="4" style="text-align: right;">TOTALE FILTRATO:</td>
+                        <td colspan="3" style="text-align: right;">TOTALE NOTA SPESE:</td>
                         <td id="totGenKm">0 km</td>
                         <td id="totGenImpKm">€ 0.00</td>
                         <td id="totGenAutostrada">€ 0.00</td>
@@ -278,7 +257,6 @@
                 <thead>
                     <tr>
                         <th>Data</th>
-                        <th>Settimana</th>
                         <th>Destinazione</th>
                         <th>Importo Autostrada (€)</th>
                     </tr>
@@ -314,7 +292,6 @@
         let archivioNoteSpese = JSON.parse(localStorage.getItem('archivioNoteSpese')) || {};
         let nsAttivaId = localStorage.getItem('nsAttivaId') || null;
 
-        // Se non esiste alcuna NS, ne crea una predefinita con la tua dicitura
         if (Object.keys(archivioNoteSpese).length === 0) {
             const defaultId = "NS_" + Date.now();
             archivioNoteSpese[defaultId] = {
@@ -386,19 +363,6 @@
             alert("Nuova Nota Spese creata e selezionata!");
         }
 
-        function aggiornaSettimanaDaData(dataStr) {
-            if (!dataStr) return;
-            const d = new Date(dataStr);
-            const giorno = d.getDate();
-            let settimana = "Settimana 1";
-            if (giorno > 7 && giorno <= 14) settimana = "Settimana 2";
-            else if (giorno > 14 && giorno <= 21) settimana = "Settimana 3";
-            else if (giorno > 21 && giorno <= 28) settimana = "Settimana 4";
-            else if (giorno > 28) settimana = "Settimana 5";
-
-            document.getElementById('spesaSettimana').value = settimana;
-        }
-
         function apriTab(tabId, ev) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
@@ -462,7 +426,6 @@
 
             const spesaDataObj = {
                 id: editId || Date.now().toString(),
-                settimana: document.getElementById('spesaSettimana').value,
                 data: document.getElementById('spesaData').value,
                 coordinatore: document.getElementById('spesaCoordinatore').value,
                 residenzaIspettore: document.getElementById('spesaResidenzaIspettore').value,
@@ -496,7 +459,6 @@
             if (!spesa) return;
 
             document.getElementById('spesaEditId').value = spesa.id;
-            document.getElementById('spesaSettimana').value = spesa.settimana || 'Settimana 1';
             document.getElementById('spesaData').value = spesa.data;
             document.getElementById('spesaCoordinatore').value = spesa.coordinatore;
             document.getElementById('spesaResidenzaIspettore').value = spesa.residenzaIspettore || '';
@@ -541,17 +503,17 @@
             const tbody = document.getElementById('bodyTabellaSpese');
             tbody.innerHTML = '';
 
-            const settSel = document.getElementById('filtroSettimana').value;
             const listaSpese = archivioNoteSpese[nsAttivaId] ? archivioNoteSpese[nsAttivaId].spese : [];
 
-            const speseFiltrate = listaSpese.filter(s => (settSel === 'TUTTE' || s.settimana === settSel));
+            // Ordina le spese per data
+            listaSpese.sort((a, b) => new Date(a.data) - new Date(b.data));
 
             let totKm = 0, totImpKm = 0, totAutostrada = 0, totVitto = 0, totVarie = 0, totComplessivo = 0;
 
-            if (speseFiltrate.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Nessuna spesa trovata per la selezione attiva.</td></tr>';
+            if (listaSpese.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Nessuna spesa trovata per questa Nota Spese.</td></tr>';
             } else {
-                speseFiltrate.forEach(s => {
+                listaSpese.forEach(s => {
                     totKm += (s.km || 0);
                     totImpKm += (s.rimborsoKm || 0);
                     totAutostrada += (s.autostrada || 0);
@@ -562,7 +524,6 @@
                     tbody.innerHTML += `
                         <tr>
                             <td>${s.data}</td>
-                            <td><small>${s.settimana}</small></td>
                             <td>${s.coordinatore}</td>
                             <td>${s.comune}</td>
                             <td>${s.km || 0} km</td>
@@ -590,21 +551,19 @@
         }
 
         function inviaReportEmail() {
-            const settSel = document.getElementById('filtroSettimana').value;
             const listaSpese = archivioNoteSpese[nsAttivaId].spese;
-            const speseFiltrate = listaSpese.filter(s => (settSel === 'TUTTE' || s.settimana === settSel));
 
-            if(speseFiltrate.length === 0) {
-                alert("Nessun dato presente per la settimana selezionata.");
+            if(listaSpese.length === 0) {
+                alert("Nessun dato presente nella Nota Spese attiva.");
                 return;
             }
 
-            let coord = speseFiltrate[0].coordinatore || "Coordinatore";
+            let coord = listaSpese[0].coordinatore || "Coordinatore";
             let nsTitolo = archivioNoteSpese[nsAttivaId].titolo;
             let totComp = document.getElementById('totGenComplessivo').innerText;
             
-            let oggetto = encodeURIComponent(`Invio Spese: ${nsTitolo} (${settSel})`);
-            let testo = encodeURIComponent(`Gentile ${coord},\n\nInvio il riepilogo delle spese relative a:\n${nsTitolo} - ${settSel}.\n\nTotale complessivo per questo periodo: ${totComp}.\n\nIn allegato i relativi giustificativi.\n\nCordiali saluti.`);
+            let oggetto = encodeURIComponent(`Invio Spese: ${nsTitolo}`);
+            let testo = encodeURIComponent(`Gentile ${coord},\n\nInvio il riepilogo delle spese relative a:\n${nsTitolo}.\n\nTotale complessivo: ${totComp}.\n\nIn allegato i relativi giustificativi.\n\nCordiali saluti.`);
             
             window.location.href = `mailto:?subject=${oggetto}&body=${testo}`;
         }
@@ -624,7 +583,7 @@
                 griglia.innerHTML += `
                     <div class="scontrino-card">
                         <strong>Destinazione: ${s.comune}</strong><br>
-                        <small>${s.data} (${s.settimana})</small><br>
+                        <small>Data: ${s.data}</small><br>
                         <small>${s.coordinatore}</small><br>
                         <small>Totale: € ${s.totale.toFixed(2)}</small><br><br>
                         <button class="btn btn-secondary" onclick="apriAnteprima('${s.id}')">Visualizza Allegato</button>
@@ -638,11 +597,11 @@
             const listaSpese = archivioNoteSpese[nsAttivaId] ? archivioNoteSpese[nsAttivaId].spese : [];
             const telepassSpese = listaSpese.filter(s => s.autostrada > 0);
             if (telepassSpese.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Nessun pedaggio registrato.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Nessun pedaggio registrato.</td></tr>';
                 return;
             }
             telepassSpese.forEach(s => {
-                tbody.innerHTML += `<tr><td>${s.data}</td><td>${s.settimana}</td><td>${s.comune}</td><td>€ ${s.autostrada.toFixed(2)}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${s.data}</td><td>${s.comune}</td><td>€ ${s.autostrada.toFixed(2)}</td></tr>`;
             });
         }
 
