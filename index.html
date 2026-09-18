@@ -6,8 +6,9 @@
     <title>Gestione Nota Spese</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f6f9; color: #333; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .container { max-width: 750px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h2, h3 { text-align: center; color: #0056b3; margin-top: 0; }
+        .section-title { background-color: #e9ecef; padding: 8px 12px; border-left: 4px solid #0056b3; font-weight: bold; margin: 20px 0 10px 0; color: #0056b3; font-size: 15px; }
         .form-group { margin-bottom: 12px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
@@ -30,7 +31,7 @@
         
         /* DATABASE TABLE STYLE */
         .db-container { overflow-x: auto; margin-top: 15px; border: 1px solid #ddd; border-radius: 6px; }
-        .db-table { width: 100%; border-collapse: collapse; min-width: 600px; font-size: 13px; }
+        .db-table { width: 100%; border-collapse: collapse; min-width: 700px; font-size: 13px; }
         .db-table th, .db-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         .db-table th { background-color: #0056b3; color: white; position: sticky; top: 0; }
         .db-table tr:nth-child(even) { background-color: #f9f9f9; }
@@ -72,7 +73,7 @@
         </div>
     </div>
 
-    <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
+    <div class="section-title">SEZIONE 1: Dettaglio Giornaliero</div>
 
     <div class="form-group">
         <label>Data:</label>
@@ -109,9 +110,23 @@
     </div>
 
     <div class="form-group">
-        <label>Autostrade (€):</label>
+        <label>Autostrade / Biglietti (€):</label>
         <input type="number" step="0.01" id="autostrade" placeholder="0.00" oninput="calcolaTotali()">
     </div>
+
+    <div class="section-title">SEZIONE 2: Telepass e Ricevute</div>
+
+    <div class="form-group">
+        <label>Importo Telepass (€):</label>
+        <input type="number" step="0.01" id="telepass" placeholder="0.00" oninput="calcolaTotali()">
+    </div>
+
+    <div class="form-group">
+        <label>Foto / PDF Telepass (Scaricato da sito Telepass):</label>
+        <input type="file" id="fotoTelepass" accept="image/*,.pdf">
+    </div>
+
+    <div class="section-title">Altre Spese</div>
 
     <div class="form-group">
         <label>Vitto (€):</label>
@@ -124,6 +139,11 @@
     </div>
 
     <div class="form-group">
+        <label>Foto Scontrino / Ricevuta Generica:</label>
+        <input type="file" id="fotoScontrino" accept="image/*">
+    </div>
+
+    <div class="form-group">
         <label>TOTALE GENERALE GIORNO (€):</label>
         <input type="text" id="totaleGiorno" class="calculated" style="font-size: 18px; color: #d9534f;" readonly value="€ 0.00">
     </div>
@@ -132,7 +152,6 @@
 
     <hr style="border: 0; border-top: 2px solid #0056b3; margin: 25px 0 10px 0;">
 
-    <!-- SEZIONE DATABASE TABELLARE -->
     <h3>📊 Database Spese Giornaliere</h3>
     
     <div class="filter-box">
@@ -157,6 +176,7 @@
                     <th>Coordinatore</th>
                     <th>Km (€)</th>
                     <th>Autostrade</th>
+                    <th>Telepass</th>
                     <th>Vitto</th>
                     <th>Varie</th>
                     <th>Totale Giorno</th>
@@ -164,17 +184,16 @@
                 </tr>
             </thead>
             <tbody id="dbTbody">
-                <!-- I dati vengono inseriti in automatico qui -->
             </tbody>
         </table>
     </div>
 
-    <!-- RIEPILOGO TOTALE CUMULATIVO -->
     <div class="summary-box" id="boxTotaleMese">
         <strong>TOTALE COMPLESSIVO VISUALIZZATO:</strong>
         <table class="db-table" style="margin-top:8px;">
             <tr><td>Tot. Rimborso Km:</td><td id="cumKm">€ 0.00</td></tr>
             <tr><td>Tot. Autostrade:</td><td id="cumAutostrade">€ 0.00</td></tr>
+            <tr><td>Tot. Telepass:</td><td id="cumTelepass">€ 0.00</td></tr>
             <tr><td>Tot. Vitto:</td><td id="cumVitto">€ 0.00</td></tr>
             <tr><td>Tot. Varie:</td><td id="cumVarie">€ 0.00</td></tr>
             <tr style="font-weight:bold; background-color:#bbdefb;"><td>TOTALE GENERALE:</td><td id="cumTotale">€ 0.00</td></tr>
@@ -273,11 +292,12 @@
     function calcolaTotali() {
         const km = parseFloat(document.getElementById('km').value) || 0;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
+        const telepass = parseFloat(document.getElementById('telepass').value) || 0;
         const vitto = parseFloat(document.getElementById('vitto').value) || 0;
         const varie = parseFloat(document.getElementById('varie').value) || 0;
 
         const totKm = km * 0.25;
-        const totaleGiorno = totKm + autostrade + vitto + varie;
+        const totaleGiorno = totKm + autostrade + telepass + vitto + varie;
 
         document.getElementById('totKmEuro').value = "€ " + totKm.toFixed(2);
         document.getElementById('totaleGiorno').value = "€ " + totaleGiorno.toFixed(2);
@@ -289,6 +309,7 @@
         const coord = document.getElementById('coordinatore').value;
         const kmVal = parseFloat(document.getElementById('km').value) || 0;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
+        const telepass = parseFloat(document.getElementById('telepass').value) || 0;
         const vitto = parseFloat(document.getElementById('vitto').value) || 0;
         const varie = parseFloat(document.getElementById('varie').value) || 0;
 
@@ -316,6 +337,7 @@
             coordinatore: coord,
             km: kmVal,
             autostrade: autostrade,
+            telepass: telepass,
             vitto: vitto,
             varie: varie,
             firma: firmaUsata
@@ -331,9 +353,7 @@
             elencoSpese.push(spesaOggetto);
         }
 
-        // Ordina per data decrescente
         elencoSpese.sort((a, b) => new Date(b.data) - new Date(a.data));
-
         localStorage.setItem('elencoNotaSpese', JSON.stringify(elencoSpese));
         
         // Reset campi
@@ -341,8 +361,11 @@
         document.getElementById('comune').value = '';
         document.getElementById('km').value = '';
         document.getElementById('autostrade').value = '';
+        document.getElementById('telepass').value = '';
         document.getElementById('vitto').value = '';
         document.getElementById('varie').value = '';
+        document.getElementById('fotoTelepass').value = '';
+        document.getElementById('fotoScontrino').value = '';
         calcolaTotali();
 
         renderDatabase();
@@ -358,6 +381,7 @@
 
         let totKmCum = 0;
         let totAutostradeCum = 0;
+        let totTelepassCum = 0;
         let totVittoCum = 0;
         let totVarieCum = 0;
 
@@ -369,10 +393,12 @@
 
         speseFiltrate.forEach(spesa => {
             const totKmEuro = spesa.km * 0.25;
-            const totGiorno = totKmEuro + spesa.autostrade + spesa.vitto + spesa.varie;
+            const valTelepass = spesa.telepass || 0;
+            const totGiorno = totKmEuro + spesa.autostrade + valTelepass + spesa.vitto + spesa.varie;
 
             totKmCum += totKmEuro;
             totAutostradeCum += spesa.autostrade;
+            totTelepassCum += valTelepass;
             totVittoCum += spesa.vitto;
             totVarieCum += spesa.varie;
 
@@ -383,6 +409,7 @@
                 <td><small>${spesa.coordinatore}</small></td>
                 <td>€ ${totKmEuro.toFixed(2)}<br><small>(${spesa.km} km)</small></td>
                 <td>€ ${spesa.autostrade.toFixed(2)}</td>
+                <td>€ ${valTelepass.toFixed(2)}</td>
                 <td>€ ${spesa.vitto.toFixed(2)}</td>
                 <td>€ ${spesa.varie.toFixed(2)}</td>
                 <td style="font-weight:bold; color:#d9534f;">€ ${totGiorno.toFixed(2)}</td>
@@ -394,9 +421,10 @@
             tbody.appendChild(tr);
         });
 
-        const totGeneraleCum = totKmCum + totAutostradeCum + totVittoCum + totVarieCum;
+        const totGeneraleCum = totKmCum + totAutostradeCum + totTelepassCum + totVittoCum + totVarieCum;
         document.getElementById('cumKm').innerText = "€ " + totKmCum.toFixed(2);
         document.getElementById('cumAutostrade').innerText = "€ " + totAutostradeCum.toFixed(2);
+        document.getElementById('cumTelepass').innerText = "€ " + totTelepassCum.toFixed(2);
         document.getElementById('cumVitto').innerText = "€ " + totVittoCum.toFixed(2);
         document.getElementById('cumVarie').innerText = "€ " + totVarieCum.toFixed(2);
         document.getElementById('cumTotale').innerText = "€ " + totGeneraleCum.toFixed(2);
@@ -411,6 +439,7 @@
         document.getElementById('coordinatore').value = spesa.coordinatore;
         document.getElementById('km').value = spesa.km;
         document.getElementById('autostrade').value = spesa.autostrade;
+        document.getElementById('telepass').value = spesa.telepass || 0;
         document.getElementById('vitto').value = spesa.vitto;
         document.getElementById('varie').value = spesa.varie;
 
@@ -439,12 +468,13 @@
             return;
         }
 
-        let csvContent = "data:text/csv;charset=utf-8,Data;Comune;Coordinatore;Km;Rimborso Km (€);Autostrade (€);Vitto (€);Varie (€);Totale Giorno (€)\n";
+        let csvContent = "data:text/csv;charset=utf-8,Data;Comune;Coordinatore;Km;Rimborso Km (€);Autostrade (€);Telepass (€);Vitto (€);Varie (€);Totale Giorno (€)\n";
 
         elencoSpese.forEach(spesa => {
             const totKmEuro = (spesa.km * 0.25).toFixed(2);
-            const totGiorno = (parseFloat(totKmEuro) + spesa.autostrade + spesa.vitto + spesa.varie).toFixed(2);
-            csvContent += `${spesa.data};${spesa.comune};${spesa.coordinatore};${spesa.km};${totKmEuro};${spesa.autostrade};${spesa.vitto};${spesa.varie};${totGiorno}\n`;
+            const valTelepass = spesa.telepass || 0;
+            const totGiorno = (parseFloat(totKmEuro) + spesa.autostrade + valTelepass + spesa.vitto + spesa.varie).toFixed(2);
+            csvContent += `${spesa.data};${spesa.comune};${spesa.coordinatore};${spesa.km};${totKmEuro};${spesa.autostrade};${valTelepass};${spesa.vitto};${spesa.varie};${totGiorno}\n`;
         });
 
         const encodedUri = encodeURI(csvContent);
