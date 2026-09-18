@@ -1,84 +1,37 @@
 from datetime import datetime
 import pandas as pd
 
-# 1. Elenco di tutte le trasferte/spese del mese
+# 1. Definizione della struttura dati per le spese
 spese_mese = [
     {
-        "Data": "2026-09-01",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "MILANO",
-        "Tot. KM": 120,
-        "Imp. KM (€)": 30.00,
-        "Autostrada (€)": 12.50,
-        "Vitto (€)": 15.00,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 57.50,
+        "Data": "2026-09-02",
+        "Descrizione": "Spesa alimentare Supermercato",
+        "Categoria": "Alimentari",
+        "Importo (€)": 85.50,
     },
     {
-        "Data": "2026-09-03",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "BERGAMO",
-        "Tot. KM": 45,
-        "Imp. KM (€)": 11.25,
-        "Autostrada (€)": 5.40,
-        "Vitto (€)": 12.00,
-        "Varie (€)": 2.00,
-        "TOTALE (€)": 30.65,
-    },
-    {
-        "Data": "2026-09-07",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "BRESCIA",
-        "Tot. KM": 13,
-        "Imp. KM (€)": 3.25,
-        "Autostrada (€)": 34.80,
-        "Vitto (€)": 3.32,
-        "Varie (€)": 1.30,
-        "TOTALE (€)": 42.67,
-    },
-    {
-        "Data": "2026-09-08",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "PUEGNANO DEL GARDA",
-        "Tot. KM": 0,
-        "Imp. KM (€)": 0.00,
-        "Autostrada (€)": 3.10,
-        "Vitto (€)": 3.15,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 6.25,
-    },
-    {
-        "Data": "2026-09-09",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "VERONA",
-        "Tot. KM": 0,
-        "Imp. KM (€)": 0.00,
-        "Autostrada (€)": 7.50,
-        "Vitto (€)": 4.22,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 11.72,
+        "Data": "2026-09-05",
+        "Descrizione": "Rifornimento Carburante",
+        "Categoria": "Trasporti",
+        "Importo (€)": 50.00,
     },
     {
         "Data": "2026-09-10",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "MANTOVA",
-        "Tot. KM": 0,
-        "Imp. KM (€)": 0.00,
-        "Autostrada (€)": 3.10,
-        "Vitto (€)": 6.03,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 9.13,
+        "Descrizione": "Bolletta Elettricità",
+        "Categoria": "Utenze",
+        "Importo (€)": 120.30,
     },
     {
-        "Data": "2026-09-11",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "ORGIANO",
-        "Tot. KM": 13,
-        "Imp. KM (€)": 3.25,
-        "Autostrada (€)": 25.20,
-        "Vitto (€)": 0.00,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 28.45,
+        "Data": "2026-09-15",
+        "Descrizione": "Cena Ristorante",
+        "Categoria": "Svago",
+        "Importo (€)": 45.00,
+    },
+    {
+        "Data": "2026-09-18",
+        "Descrizione": "Acquisto Farmacia",
+        "Categoria": "Salute",
+        "Importo (€)": 24.80,
     },
 ]
 
@@ -86,49 +39,25 @@ spese_mese = [
 df_spese = pd.DataFrame(spese_mese)
 df_spese["Data"] = pd.to_datetime(df_spese["Data"])
 
-# 3. Calcolo dei Totali Mensili
-totale_mensile = df_spese[
-    [
-        "Tot. KM",
-        "Imp. KM (€)",
-        "Autostrada (€)",
-        "Vitto (€)",
-        "Varie (€)",
-        "TOTALE (€)",
-    ]
-].sum()
-
-# 4. Creazione del DataFrame di Riepilogo Mensile
-df_riepilogo_mensile = pd.DataFrame(
-    [
-        {
-            "Mese": "Settembre 2026",
-            "Tot. KM": int(totale_mensile["Tot. KM"]),
-            "Imp. KM (€)": round(totale_mensile["Imp. KM (€)"], 2),
-            "Autostrada (€)": round(totale_mensile["Autostrada (€)"], 2),
-            "Vitto (€)": round(totale_mensile["Vitto (€)"], 2),
-            "Varie (€)": round(totale_mensile["Varie (€)"], 2),
-            "TOTALE GENERALE (€)": round(totale_mensile["TOTALE (€)"], 2),
-        }
-    ]
-)
-
-# 5. Stampa a video delle due schede
-print("=" * 85)
-print("SCHEDA 1: RIEPILOGO MENSILE")
-print("=" * 85)
-print(df_riepilogo_mensile.to_string(index=False))
-
-print("\n" + "=" * 85)
-print("SCHEDA 2: REGISTRO DETTAGLIATO")
-print("=" * 85)
+# 3. Visualizzazione del REGISTRO DETTAGLIATO
+print("=" * 60)
+print(" REGISTRO DETTAGLIATO SPESE MESE ")
+print("=" * 60)
 print(df_spese.to_string(index=False))
 
-# 6. Esportazione in file Excel con 2 schede separate
-with pd.ExcelWriter("Riepilogo_Mensile_Spese.xlsx", engine="openpyxl") as writer:
-    df_riepilogo_mensile.to_excel(
-        writer, sheet_name="Riepilogo Mensile", index=False
-    )
-    df_spese.to_excel(writer, sheet_name="Dettaglio Spese", index=False)
+# 4. Calcolo Totale Mensile e Riassunto per Categoria
+totale_mese = df_spese["Importo (€)"].sum()
+spese_per_categoria = (
+    df_spese.groupby("Categoria")["Importo (€)"].sum().reset_index()
+)
 
-print("\n✓ File Excel salvato con successo con le due schede!")
+print("\n" + "=" * 60)
+print(" RIEPILOGO E VISIONE D'INSIEME ")
+print("=" * 60)
+print(spese_per_categoria.to_string(index=False))
+print("-" * 60)
+print(f"TOTALE COMPLESSIVO DEL MESE: € {totale_mese:.2f}")
+print("=" * 60)
+
+# 5. Esportazione opzionale in file Excel / CSV
+# df_spese.to_csv("registro_dettaglio_spese.csv", index=False)
