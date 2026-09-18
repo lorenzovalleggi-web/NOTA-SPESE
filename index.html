@@ -23,16 +23,18 @@
         input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         .calculated { background-color: #e9ecef; font-weight: bold; }
         
-        /* FIRMA RIDOTTA E COMPATTA */
+        /* FIRMA COMPATTA CON MULTI-OPZIONE */
         .signature-box { background: #eef6ff; padding: 8px; border-radius: 6px; border: 1px solid #b6d4fe; margin-bottom: 10px; }
         canvas { border: 1px dashed #0056b3; border-radius: 4px; background: #fff; touch-action: none; display: block; width: 100%; height: 75px; box-sizing: border-box; }
-        .signature-preview { max-width: 90px; height: auto; border: 1px solid #ccc; background: #fff; padding: 2px; }
+        .signature-preview { max-width: 120px; height: auto; border: 1px solid #ccc; background: #fff; padding: 2px; border-radius: 4px; }
+        .signature-actions { display: flex; gap: 5px; margin-top: 5px; align-items: center; flex-wrap: wrap; }
 
         /* PULSANTI */
         .btn-main { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-main:hover { background-color: #218838; }
-        .btn-clear { background-color: #6c757d; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; margin-top: 3px; }
-        .btn-save-sig { background-color: #0d6efd; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; margin-top: 3px; }
+        .btn-clear { background-color: #6c757d; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; }
+        .btn-save-sig { background-color: #0d6efd; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; }
+        .btn-file-sig { background-color: #17a2b8; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; display: inline-block; }
         .btn-edit { background-color: #ffc107; color: #212529; padding: 3px 6px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
         .btn-delete { background-color: #dc3545; color: white; padding: 3px 6px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
         .btn-export { background-color: #17a2b8; color: white; padding: 8px; border: none; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
@@ -67,7 +69,7 @@
         <button class="tab-button" onclick="openTab(event, 'tab6')">6. Sintesi Scontrini</button>
     </div>
 
-    <!-- SCHEDA 1: CALCOLI & REGISTRAZIONE (SENZA VOCE TELEPASS) -->
+    <!-- SCHEDA 1: CALCOLI & REGISTRAZIONE -->
     <div id="tab1" class="tab-content active">
         <div class="section-title">Anagrafica Ispettore</div>
         
@@ -81,19 +83,33 @@
             <input type="text" id="residenza" placeholder="Es. PISA, MILANO, ROMA...">
         </div>
 
-        <!-- SEZIONE FIRMA COMPATTA -->
+        <!-- SEZIONE FIRMA COMPATTA CON CARICAMENTO FILE -->
         <div class="signature-box">
-            <label>Firma Dichiarante (Formato Ridotto):</label>
+            <label>Firma Dichiarante (Disegna o Carica Immagine/Foto):</label>
+
+            <!-- STATO: FIRMA SALVATA / PRESENTE -->
             <div id="sezioneFirmaEsistente" style="display:none;">
-                <small style="color:#28a745; font-weight:bold;">✓ Firma presente</small>
-                <img id="imgFirmaSalvata" class="signature-preview" alt="Firma Salvata">
-                <button type="button" class="btn-clear" onclick="abilitaModificaFirma()">Cambia</button>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div>
+                        <small style="color:#28a745; font-weight:bold;">✓ Firma acquisita</small><br>
+                        <img id="imgFirmaSalvata" class="signature-preview" alt="Firma Salvata">
+                    </div>
+                    <button type="button" class="btn-clear" onclick="abilitaModificaFirma()">Modifica / Cambia</button>
+                </div>
             </div>
 
+            <!-- STATO: INSERIMENTO NUOVA FIRMA -->
             <div id="sezioneNuovaFirma">
                 <canvas id="firmaCanvas" width="400" height="75"></canvas>
-                <button type="button" class="btn-clear" onclick="pulisciFirma()">Cancella</button>
-                <button type="button" class="btn-save-sig" onclick="salvaFirmaInMemoria()">Salva Firma</button>
+                <div class="signature-actions">
+                    <button type="button" class="btn-clear" onclick="pulisciFirma()">Cancella Disegno</button>
+                    <button type="button" class="btn-save-sig" onclick="salvaFirmaInMemoria()">Salva Disegno</button>
+                    
+                    <label class="btn-file-sig" style="margin:0; cursor:pointer;">
+                        📁 Carica Immagine Firma
+                        <input type="file" id="inputFotoFirma" accept="image/*" style="display:none;" onchange="gestisciCaricamentoFotoFirma(event)">
+                    </label>
+                </div>
             </div>
         </div>
 
@@ -337,7 +353,7 @@
         evt.currentTarget.classList.add("active");
     }
 
-    /* GESTIONE FIRMA COMPATTA */
+    /* GESTIONE FIRMA (CANVAS + CARICAMENTO FILE) */
     function caricaFirmaSalvata() {
         const firmaSalvata = localStorage.getItem('notaSpeseFirma');
         if (firmaSalvata) {
@@ -359,6 +375,21 @@
         localStorage.setItem('notaSpeseFirma', firmaDataUrl);
         caricaFirmaSalvata();
         alert("Firma salvata!");
+    }
+
+    /* CARICAMENTO FOTO/IMMAGINE DELLA FIRMA */
+    function gestisciCaricamentoFotoFirma(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const dataUrl = e.target.result;
+            localStorage.setItem('notaSpeseFirma', dataUrl);
+            caricaFirmaSalvata();
+            alert("Foto/Immagine della firma caricata con successo!");
+        };
+        reader.readAsDataURL(file);
     }
 
     function abilitaModificaFirma() {
@@ -411,7 +442,7 @@
         firmaIsBlank = true;
     }
 
-    /* CALCOLI PAGINA 1 (ESCLUSO TELEPASS) */
+    /* CALCOLI PAGINA 1 */
     function calcolaTotali() {
         const km = parseFloat(document.getElementById('km').value) || 0;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
@@ -484,7 +515,7 @@
         alert("Spesa registrata correttamente!");
     }
 
-    /* GESTIONE CARICAMENTO MULTIPLO SCONTRINI (PAG 3) */
+    /* GESTIONE CARICAMENTO MULTIPLO SCONTRINI */
     function gestisciCaricamentoScontrini() {
         const files = document.getElementById('inputMultiScontrini').files;
         if (files.length === 0) return;
@@ -506,7 +537,7 @@
         renderScontrini();
     }
 
-    /* GESTIONE CARICAMENTO TELEPASS (PAG 4) */
+    /* GESTIONE CARICAMENTO TELEPASS */
     function gestisciCaricamentoTelepass() {
         const fileInput = document.getElementById('inputTelepassFile');
         if (fileInput.files.length > 0) {
