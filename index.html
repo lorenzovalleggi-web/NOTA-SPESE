@@ -7,18 +7,21 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f6f9; color: #333; }
         .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #0056b3; margin-top: 0; }
+        h2, h3 { text-align: center; color: #0056b3; margin-top: 0; }
         .form-group { margin-bottom: 12px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
         input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
         .calculated { background-color: #e9ecef; font-weight: bold; }
-        .highlight { background-color: #fff3cd; font-weight: bold; color: #856404; }
         canvas { border: 2px dashed #0056b3; border-radius: 4px; background: #fff; touch-action: none; display: block; width: 100%; height: 130px; box-sizing: border-box; }
         .btn-main { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-main:hover { background-color: #218838; }
         .btn-clear { background-color: #6c757d; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; margin-top: 5px; }
-        .card { background: #f8f9fa; border: 1px solid #ddd; padding: 12px; margin-top: 10px; border-radius: 6px; }
-        .signature-preview { max-width: 150px; height: auto; border: 1px solid #ccc; margin-top: 5px; display: block; }
+        .card { background: #f8f9fa; border: 1px solid #cce5ff; padding: 12px; margin-top: 12px; border-radius: 6px; }
+        .detail-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
+        .detail-table th, .detail-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        .detail-table th { background-color: #e9ecef; }
+        .signature-preview { max-width: 130px; height: auto; border: 1px solid #ccc; margin-top: 5px; display: block; }
+        .summary-box { background: #e3f2fd; border: 1px solid #90caf9; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -68,7 +71,7 @@
     </div>
 
     <div class="form-group">
-        <label>Totale Rimborso Chilometrico (€ 0.25/km):</label>
+        <label>Rimborso Km (€ 0.25/km):</label>
         <input type="text" id="totKmEuro" class="calculated" readonly value="€ 0.00">
     </div>
 
@@ -87,12 +90,6 @@
         <input type="number" step="0.01" id="varie" placeholder="0.00" oninput="calcolaTotali()">
     </div>
 
-    <!-- CAMPO TOTALE ALTRI RIMBORSI -->
-    <div class="form-group">
-        <label>TOTALE ALTRI RIMBORSI (Autostrade + Vitto + Varie):</label>
-        <input type="text" id="totAltriRimborsi" class="highlight" readonly value="€ 0.00">
-    </div>
-
     <div class="form-group">
         <label>Foto Scontrino / Ricevuta:</label>
         <input type="file" id="fotoScontrino" accept="image/*">
@@ -104,7 +101,6 @@
         <button type="button" class="btn-clear" onclick="pulisciFirma()">Cancella e Rifai Firma</button>
     </div>
 
-    <!-- TOTALE GENERALE DI GIORNATA -->
     <div class="form-group">
         <label>TOTALE GENERALE GIORNO (€):</label>
         <input type="text" id="totaleGiorno" class="calculated" style="font-size: 18px; color: #d9534f;" readonly value="€ 0.00">
@@ -112,11 +108,28 @@
 
     <button class="btn-main" onclick="salvaSpesa()">Salva Nota Spesa</button>
 
-    <h3 style="margin-top:20px; color:#0056b3;">Riepilogo Registrazioni</h3>
+    <h3>Riepilogo Dettagliato Registrazioni</h3>
     <div id="listaSpese"></div>
+
+    <!-- RIEPILOGO TOTALE CUMULATIVO -->
+    <div class="summary-box" id="boxTotaleMese" style="display:none;">
+        <strong>TOTALE COMPLESSIVO CUMULATIVO:</strong>
+        <table class="detail-table">
+            <tr><td>Tot. Rimborso Km:</td><td id="cumKm">€ 0.00</td></tr>
+            <tr><td>Tot. Autostrade:</td><td id="cumAutostrade">€ 0.00</td></tr>
+            <tr><td>Tot. Vitto:</td><td id="cumVitto">€ 0.00</td></tr>
+            <tr><td>Tot. Varie:</td><td id="cumVarie">€ 0.00</td></tr>
+            <tr style="font-weight:bold; background-color:#bbdefb;"><td>TOTALE GENERALE:</td><td id="cumTotale">€ 0.00</td></tr>
+        </table>
+    </div>
 </div>
 
 <script>
+    let totaleKmEuroCum = 0;
+    let totaleAutostradeCum = 0;
+    let totaleVittoCum = 0;
+    let totaleVarieCum = 0;
+
     function calcolaTotali() {
         const km = parseFloat(document.getElementById('km').value) || 0;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
@@ -124,11 +137,9 @@
         const varie = parseFloat(document.getElementById('varie').value) || 0;
 
         const totKm = km * 0.25;
-        const totAltri = autostrade + vitto + varie;
-        const totaleGiorno = totKm + totAltri;
+        const totaleGiorno = totKm + autostrade + vitto + varie;
 
         document.getElementById('totKmEuro').value = "€ " + totKm.toFixed(2);
-        document.getElementById('totAltriRimborsi').value = "€ " + totAltri.toFixed(2);
         document.getElementById('totaleGiorno').value = "€ " + totaleGiorno.toFixed(2);
     }
 
@@ -183,9 +194,12 @@
         const data = document.getElementById('dataSpesa').value;
         const comune = document.getElementById('comune').value;
         const coord = document.getElementById('coordinatore').value;
-        const totKm = document.getElementById('totKmEuro').value;
-        const totAltri = document.getElementById('totAltriRimborsi').value;
-        const tot = document.getElementById('totaleGiorno').value;
+        const kmVal = parseFloat(document.getElementById('km').value) || 0;
+        const totKm = kmVal * 0.25;
+        const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
+        const vitto = parseFloat(document.getElementById('vitto').value) || 0;
+        const varie = parseFloat(document.getElementById('varie').value) || 0;
+        const totGiorno = totKm + autostrade + vitto + varie;
         const firmaDataUrl = canvas.toDataURL();
 
         if(!data || !comune) {
@@ -193,19 +207,40 @@
             return;
         }
 
+        // AGGIORNA TOTALI CUMULATIVI
+        totaleKmEuroCum += totKm;
+        totaleAutostradeCum += autostrade;
+        totaleVittoCum += vitto;
+        totaleVarieCum += varie;
+        const totaleGeneraleCum = totaleKmEuroCum + totaleAutostradeCum + totaleVittoCum + totaleVarieCum;
+
+        document.getElementById('cumKm').innerText = "€ " + totaleKmEuroCum.toFixed(2);
+        document.getElementById('cumAutostrade').innerText = "€ " + totaleAutostradeCum.toFixed(2);
+        document.getElementById('cumVitto').innerText = "€ " + totaleVittoCum.toFixed(2);
+        document.getElementById('cumVarie').innerText = "€ " + totaleVarieCum.toFixed(2);
+        document.getElementById('cumTotale').innerText = "€ " + totaleGeneraleCum.toFixed(2);
+        document.getElementById('boxTotaleMese').style.display = 'block';
+
+        // CREA SCHEDA CON TABELLA DETTAGLIATA
         const lista = document.getElementById('listaSpese');
         const card = document.createElement('div');
         card.className = 'card';
         card.innerHTML = `
-            <strong>${data}</strong> - ${comune} (${coord})<br>
-            Rimb. Km: <strong>${totKm}</strong> | Altri Rimborsi: <strong>${totAltri}</strong><br>
-            Totale Giornaliero: <strong style="color:#d9534f;">${tot}</strong><br>
-            <small>Firma allegata:</small><br>
+            <strong>${data}</strong> - ${comune} <br><small>(${coord})</small>
+            <table class="detail-table">
+                <tr><th>Voce Spesa</th><th>Importo</th></tr>
+                <tr><td>Rimborso Km (${kmVal} km × € 0.25)</td><td>€ ${totKm.toFixed(2)}</td></tr>
+                <tr><td>Autostrade</td><td>€ ${autostrade.toFixed(2)}</td></tr>
+                <tr><td>Vitto</td><td>€ ${vitto.toFixed(2)}</td></tr>
+                <tr><td>Varie</td><td>€ ${varie.toFixed(2)}</td></tr>
+                <tr style="font-weight:bold; background-color:#e2e3e5;"><td>TOTALE GIORNO</td><td style="color:#d9534f;">€ ${totGiorno.toFixed(2)}</td></tr>
+            </table>
+            <small style="margin-top:5px; display:block;">Firma allegata:</small>
             <img src="${firmaDataUrl}" class="signature-preview" alt="Firma">
         `;
         lista.appendChild(card);
 
-        alert("Spesa registrata con successo!");
+        alert("Spesa salvata con successo!");
     }
 </script>
 
