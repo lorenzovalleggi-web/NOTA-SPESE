@@ -17,6 +17,8 @@
         .btn-main:hover { background-color: #218838; }
         .btn-clear { background-color: #6c757d; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; margin-top: 5px; }
         .btn-save-sig { background-color: #0d6efd; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; margin-top: 5px; }
+        .btn-edit { background-color: #ffc107; color: #212529; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .btn-delete { background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; font-weight: bold; }
         .card { background: #f8f9fa; border: 1px solid #cce5ff; padding: 12px; margin-top: 12px; border-radius: 6px; }
         .detail-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
         .detail-table th, .detail-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
@@ -24,11 +26,12 @@
         .signature-box { background: #eef6ff; padding: 12px; border-radius: 6px; border: 1px solid #b6d4fe; margin-bottom: 15px; }
         .signature-preview { max-width: 140px; height: auto; border: 1px solid #ccc; margin-top: 5px; display: block; background: #fff; padding: 3px; }
         .summary-box { background: #e3f2fd; border: 1px solid #90caf9; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 14px; }
+        .card-actions { margin-top: 10px; text-align: right; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="topForm">
     <h2>Nota Spese Trasferte</h2>
     
     <div class="form-group">
@@ -120,12 +123,12 @@
         <input type="text" id="totaleGiorno" class="calculated" style="font-size: 18px; color: #d9534f;" readonly value="€ 0.00">
     </div>
 
-    <button class="btn-main" onclick="salvaSpesa()">Salva Nota Spesa</button>
+    <button class="btn-main" id="btnSalva" onclick="salvaSpesa()">Salva Nota Spesa</button>
 
     <h3>Riepilogo Dettagliato Registrazioni</h3>
     <div id="listaSpese"></div>
 
-    <div class="summary-box" id="boxTotaleMese" style="display:none;">
+    <div class="summary-box" id="boxTotaleMese">
         <strong>TOTALE COMPLESSIVO CUMULATIVO:</strong>
         <table class="detail-table">
             <tr><td>Rimborso Km:</td><td id="cumKm">€ 0.00</td></tr>
@@ -138,12 +141,9 @@
 </div>
 
 <script>
-    let totaleKmEuroCum = 0;
-    let totaleAutostradeCum = 0;
-    let totaleVittoCum = 0;
-    let totaleVarieCum = 0;
+    let elencoSpese = JSON.parse(localStorage.getItem('elencoNotaSpese')) || [];
+    let editId = null;
 
-    // GESTIONE FIRMA MEMORIZZATA (LOCALSTORAGE)
     const canvas = document.getElementById('firmaCanvas');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
@@ -151,6 +151,7 @@
 
     window.onload = function() {
         caricaFirmaSalvata();
+        renderSpese();
     };
 
     function caricaFirmaSalvata() {
@@ -173,7 +174,7 @@
         const firmaDataUrl = canvas.toDataURL();
         localStorage.setItem('notaSpeseFirma', firmaDataUrl);
         caricaFirmaSalvata();
-        alert("Firma salvata con successo per i prossimi utilizzi!");
+        alert("Firma salvata con successo!");
     }
 
     function abilitaModificaFirma() {
@@ -245,13 +246,10 @@
         const comune = document.getElementById('comune').value;
         const coord = document.getElementById('coordinatore').value;
         const kmVal = parseFloat(document.getElementById('km').value) || 0;
-        const totKm = kmVal * 0.25;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
         const vitto = parseFloat(document.getElementById('vitto').value) || 0;
         const varie = parseFloat(document.getElementById('varie').value) || 0;
-        const totGiorno = totKm + autostrade + vitto + varie;
 
-        // RECUPERA FIRMA (O DA MEMORIA O DAL CANVAS)
         let firmaUsata = localStorage.getItem('notaSpeseFirma');
         if (!firmaUsata) {
             if (!firmaIsBlank) {
@@ -269,40 +267,120 @@
             return;
         }
 
-        // AGGIORNA TOTALI CUMULATIVI
-        totaleKmEuroCum += totKm;
-        totaleAutostradeCum += autostrade;
-        totaleVittoCum += vitto;
-        totaleVarieCum += varie;
-        const totaleGeneraleCum = totaleKmEuroCum + totaleAutostradeCum + totaleVittoCum + totaleVarieCum;
+        const spesaOggetto = {
+            id: editId !== null ? editId : Date.now(),
+            data: data,
+            comune: comune,
+            coordinatore: coord,
+            km: kmVal,
+            autostrade: autostrade,
+            vitto: vitto,
+            varie: varie,
+            firma: firmaUsata
+        };
 
-        document.getElementById('cumKm').innerText = "€ " + totaleKmEuroCum.toFixed(2);
-        document.getElementById('cumAutostrade').innerText = "€ " + totaleAutostradeCum.toFixed(2);
-        document.getElementById('cumVitto').innerText = "€ " + totaleVittoCum.toFixed(2);
-        document.getElementById('cumVarie').innerText = "€ " + totaleVarieCum.toFixed(2);
-        document.getElementById('cumTotale').innerText = "€ " + totaleGeneraleCum.toFixed(2);
-        document.getElementById('boxTotaleMese').style.display = 'block';
+        if (editId !== null) {
+            const index = elencoSpese.findIndex(item => item.id === editId);
+            if (index !== -1) elencoSpese[index] = spesaOggetto;
+            editId = null;
+            document.getElementById('btnSalva').innerText = "Salva Nota Spesa";
+            document.getElementById('btnSalva').style.backgroundColor = "#28a745";
+        } else {
+            elencoSpese.push(spesaOggetto);
+        }
 
-        // AGGIUNGE SCHEDA
+        localStorage.setItem('elencoNotaSpese', JSON.stringify(elencoSpese));
+        
+        // Reset Form
+        document.getElementById('dataSpesa').value = '';
+        document.getElementById('comune').value = '';
+        document.getElementById('km').value = '';
+        document.getElementById('autostrade').value = '';
+        document.getElementById('vitto').value = '';
+        document.getElementById('varie').value = '';
+        calcolaTotali();
+
+        renderSpese();
+        alert("Nota Spesa salvata correttamente!");
+    }
+
+    function renderSpese() {
         const lista = document.getElementById('listaSpese');
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `
-            <strong>${data}</strong> - ${comune} <br><small>(${coord})</small>
-            <table class="detail-table">
-                <tr><th>Voce Spesa</th><th>Importo</th></tr>
-                <tr><td>Rimborso Km (${kmVal} km × € 0.25)</td><td>€ ${totKm.toFixed(2)}</td></tr>
-                <tr><td>Autostrade</td><td>€ ${autostrade.toFixed(2)}</td></tr>
-                <tr><td>Vitto</td><td>€ ${vitto.toFixed(2)}</td></tr>
-                <tr><td>Varie</td><td>€ ${varie.toFixed(2)}</td></tr>
-                <tr style="font-weight:bold; background-color:#e2e3e5;"><td>TOTALE GIORNO</td><td style="color:#d9534f;">€ ${totGiorno.toFixed(2)}</td></tr>
-            </table>
-            <small style="margin-top:5px; display:block;">Firma allegata:</small>
-            <img src="${firmaUsata}" class="signature-preview" alt="Firma">
-        `;
-        lista.appendChild(card);
+        lista.innerHTML = '';
 
-        alert("Spesa salvata con successo!");
+        let totKmCum = 0;
+        let totAutostradeCum = 0;
+        let totVittoCum = 0;
+        let totVarieCum = 0;
+
+        elencoSpese.forEach(spesa => {
+            const totKmEuro = spesa.km * 0.25;
+            const totGiorno = totKmEuro + spesa.autostrade + spesa.vitto + spesa.varie;
+
+            totKmCum += totKmEuro;
+            totAutostradeCum += spesa.autostrade;
+            totVittoCum += spesa.vitto;
+            totVarieCum += spesa.varie;
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <strong>${spesa.data}</strong> - ${spesa.comune} <br><small>(${spesa.coordinatore})</small>
+                <table class="detail-table">
+                    <tr><th>Voce Spesa</th><th>Importo</th></tr>
+                    <tr><td>Rimborso Km (${spesa.km} km × € 0.25)</td><td>€ ${totKmEuro.toFixed(2)}</td></tr>
+                    <tr><td>Autostrade</td><td>€ ${spesa.autostrade.toFixed(2)}</td></tr>
+                    <tr><td>Vitto</td><td>€ ${spesa.vitto.toFixed(2)}</td></tr>
+                    <tr><td>Varie</td><td>€ ${spesa.varie.toFixed(2)}</td></tr>
+                    <tr style="font-weight:bold; background-color:#e2e3e5;"><td>TOTALE GIORNO</td><td style="color:#d9534f;">€ ${totGiorno.toFixed(2)}</td></tr>
+                </table>
+                <small style="margin-top:5px; display:block;">Firma allegata:</small>
+                <img src="${spesa.firma}" class="signature-preview" alt="Firma">
+                <div class="card-actions">
+                    <button class="btn-edit" onclick="modificaSpesa(${spesa.id})">✏️ Modifica</button>
+                    <button class="btn-delete" onclick="eliminaSpesa(${spesa.id})">🗑️ Elimina</button>
+                </div>
+            `;
+            lista.appendChild(card);
+        });
+
+        const totGeneraleCum = totKmCum + totAutostradeCum + totVittoCum + totVarieCum;
+        document.getElementById('cumKm').innerText = "€ " + totKmCum.toFixed(2);
+        document.getElementById('cumAutostrade').innerText = "€ " + totAutostradeCum.toFixed(2);
+        document.getElementById('cumVitto').innerText = "€ " + totVittoCum.toFixed(2);
+        document.getElementById('cumVarie').innerText = "€ " + totVarieCum.toFixed(2);
+        document.getElementById('cumTotale').innerText = "€ " + totGeneraleCum.toFixed(2);
+    }
+
+    function modificaSpesa(id) {
+        const spesa = elencoSpese.find(item => item.id === id);
+        if (!spesa) return;
+
+        document.getElementById('dataSpesa').value = spesa.data;
+        document.getElementById('comune').value = spesa.comune;
+        document.getElementById('coordinatore').value = spesa.coordinatore;
+        document.getElementById('km').value = spesa.km;
+        document.getElementById('autostrade').value = spesa.autostrade;
+        document.getElementById('vitto').value = spesa.vitto;
+        document.getElementById('varie').value = spesa.varie;
+
+        calcolaTotali();
+
+        editId = id;
+        const btnSalva = document.getElementById('btnSalva');
+        btnSalva.innerText = "Aggiorna Nota Spesa";
+        btnSalva.style.backgroundColor = "#ffc107";
+        btnSalva.style.color = "#212529";
+
+        document.getElementById('topForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function eliminaSpesa(id) {
+        if (confirm("Sei sicuro di voler eliminare questa registrazione?")) {
+            elencoSpese = elencoSpese.filter(item => item.id !== id);
+            localStorage.setItem('elencoNotaSpese', JSON.stringify(elencoSpese));
+            renderSpese();
+        }
     }
 </script>
 
