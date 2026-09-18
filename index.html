@@ -1,9 +1,9 @@
 from datetime import datetime
 import pandas as pd
 
-# 1. Registro completo contenente anche le settimane precedenti del mese
+# 1. Registro completo delle spese (incluso il dettaglio per trasferte/chilometri)
 tutte_le_spese = [
-    # SETTIMANA 36 (1 - 4 Settembre 2026)
+    # Settimana precedente (es. Settimana 36)
     {
         "Data": "2026-09-01",
         "Coordinatore": "Coordinatore Migliaccio",
@@ -26,7 +26,7 @@ tutte_le_spese = [
         "Varie (€)": 2.00,
         "TOTALE (€)": 30.65,
     },
-    # SETTIMANA 37 (7 - 11 Settembre 2026 - Settimana Attiva)
+    # Settimana dal 7 all'11 Settembre (Settimana 37)
     {
         "Data": "2026-09-07",
         "Coordinatore": "Coordinatore Migliaccio",
@@ -84,16 +84,18 @@ tutte_le_spese = [
     },
 ]
 
-df = pd.DataFrame(tutte_le_spese)
-df["Data"] = pd.to_datetime(df["Data"])
+df_spese = pd.DataFrame(tutte_le_spese)
+df_spese["Data"] = pd.to_datetime(df_spese["Data"])
 
-# Assegnazione del numero di settimana e del mese
-df["Settimana_Num"] = df["Data"].dt.isocalendar().week
-df["Settimana"] = "Settimana " + df["Settimana_Num"].astype(str)
+# Assegnazione automatica della settimana
+df_spese["Settimana_Num"] = df_spese["Data"].dt.isocalendar().week
+df_spese["Settimana"] = "Settimana " + df_spese["Settimana_Num"].astype(str)
 
-# 2. SEZIONE 1: TABELLA RIEPILOGATIVA PER SETTIMANA
-riepilogo_settimane = (
-    df.groupby("Settimana")[
+# ==============================================================================
+# PAGINA 1: RIEPILOGO TOTALE SETTIMANE PRECEDENTI E MESE COMPLETO
+# ==============================================================================
+riepilogo_settimanale = (
+    df_spese.groupby("Settimana")[
         [
             "Tot. KM",
             "Imp. KM (€)",
@@ -107,15 +109,7 @@ riepilogo_settimane = (
     .reset_index()
 )
 
-print("=" * 85)
-print(
-    "                RIEPILOGO CONTEGGI SETTIMANALI E PRECEDENTI                "
-)
-print("=" * 85)
-print(riepilogo_settimane.to_string(index=False))
-
-# 3. SEZIONE 2: TOTALE GENERALE MESE (CUMULATIVO)
-totali_mese = df[
+totale_mensile = df_spese[
     [
         "Tot. KM",
         "Imp. KM (€)",
@@ -126,23 +120,35 @@ totali_mese = df[
     ]
 ].sum()
 
-print("-" * 85)
-print("TOTALE CUMULATIVO MESE DI SETTEMBRE 2026:")
-print(f"• Total KM:          {totali_mese['Tot. KM']} km")
-print(f"• Totale Importo KM: € {totali_mese['Imp. KM (€)']:.2f}")
-print(f"• Totale Autostrada: € {totali_mese['Autostrada (€)']:.2f}")
-print(f"• Totale Vitto:      € {totali_mese['Vitto (€)']:.2f}")
-print(f"• Totale Varie:      € {totali_mese['Varie (€)']:.2f}")
-print(f"---> SPESA TOTALE MESE (COMPLESSIVA): € {totali_mese['TOTALE (€)']:.2f}")
-print("=" * 85)
+print("=" * 80)
+print("PAGINA 1 - RIEPILOGO PER SETTIMANA ED INSIEME DEL MESE")
+print("=" * 80)
+print(riepilogo_settimanale.to_string(index=False))
+print("-" * 80)
+print("TOTALE CUMULATIVO DEL MESE (TUTTE LE SETTIMANE):")
+print(f"• Chilometri totali:    {totale_mensile['Tot. KM']} km")
+print(f"• Importo KM totale:    € {totale_mensile['Imp. KM (€)']:.2f}")
+print(f"• Autostrada totale:    € {totale_mensile['Autostrada (€)']:.2f}")
+print(f"• Vitto totale:         € {totale_mensile['Vitto (€)']:.2f}")
+print(f"• Varie totale:         € {totale_mensile['Varie (€)']:.2f}")
+print(f"--> SPESA TOTALE MESE:  € {totale_mensile['TOTALE (€)']:.2f}")
+print("=" * 80)
 
-# 4. SEZIONE 3: REGISTRO DETTAGLIATO DI TUTTE LE OPERAZIONI
-print("\n" + "=" * 85)
-print("             REGISTRO DETTAGLIATO COMPLETO (TUTTE LE SETTIMANE)            ")
-print("=" * 85)
-cols_visibili = [
+# ==============================================================================
+# PAGINA 2: REGISTRO DETTAGLIATO (TUTTE LE OPERAZIONI DEL MESE)
+# ==============================================================================
+print("\n" + "=" * 80)
+print("PAGINA 2 - REGISTRO DETTAGLIATO COMPLETO (TUTTE LE SETTIMANE)")
+print("=" * 80)
+
+pd.set_option("display.max_rows", None)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.width", 1000)
+
+colonne_registro = [
     "Data",
     "Settimana",
+    "Coordinatore",
     "Destinazione",
     "Tot. KM",
     "Imp. KM (€)",
@@ -151,5 +157,19 @@ cols_visibili = [
     "Varie (€)",
     "TOTALE (€)",
 ]
-print(df[cols_visibili].to_string(index=False))
-print("=" * 85)
+
+print(df_spese[colonne_registro].to_string(index=False))
+print("=" * 80)
+
+# ==============================================================================
+# ESPORTAZIONE IN EXCEL SU DUE FOGLI SEPARATI
+# ==============================================================================
+with pd.ExcelWriter("Report_Note_Spese_Settembre.xlsx", engine="openpyxl") as writer:
+    riepilogo_settimanale.to_excel(
+        writer, sheet_name="Pagina 1 - Riepilogo", index=False
+    )
+    df_spese[colonne_registro].to_excel(
+        writer, sheet_name="Pagina 2 - Registro Dettaglio", index=False
+    )
+
+print("\n-> File Excel 'Report_Note_Spese_Settembre.xlsx' salvato con successo!")
