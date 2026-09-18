@@ -34,41 +34,32 @@ spese_mese = [
     },
 ]
 
-# 2. Creazione DataFrame
+# 2. Creazione DataFrame e aggiunta settimana
 df_spese = pd.DataFrame(spese_mese)
 df_spese["Data_Dt"] = pd.to_datetime(df_spese["Data"])
-
-# Calcolo del numero di settimana
 df_spese["Settimana"] = "Settimana " + df_spese["Data_Dt"].dt.isocalendar().week.astype(str)
 df_spese["Data"] = df_spese["Data_Dt"].dt.strftime("%Y-%m-%d")
 
 # 3. Calcolo dei totali
 totale_mese = df_spese["Importo (€)"].sum()
+spese_settimana = df_spese.groupby("Settimana")["Importo (€)"].sum().reset_index()
+spese_categoria = df_spese.groupby("Categoria")["Importo (€)"].sum().reset_index()
 
-spese_per_settimana = (
-    df_spese.groupby("Settimana")["Importo (€)"].sum().reset_index()
-)
-
-spese_per_categoria = (
-    df_spese.groupby("Categoria")["Importo (€)"].sum().reset_index()
-)
-
-# 4. Stampa dei risultati
+# 4. Stampa a schermo
 print("=" * 60)
 print(" REGISTRO DETTAGLIATO SPESE MESE ")
 print("=" * 60)
-colonne_visibili = ["Data", "Settimana", "Descrizione", "Categoria", "Importo (€)"]
-print(df_spese[colonne_visibili].to_string(index=False))
+print(df_spese[["Data", "Settimana", "Descrizione", "Categoria", "Importo (€)"]].to_string(index=False))
 
 print("\n" + "=" * 60)
 print(" RIEPILOGO SETTIMANALE ")
 print("=" * 60)
-print(spese_per_settimana.to_string(index=False))
+print(spese_settimana.to_string(index=False))
 
 print("\n" + "=" * 60)
 print(" RIEPILOGO PER CATEGORIA ")
 print("=" * 60)
-print(spese_per_categoria.to_string(index=False))
+print(spese_categoria.to_string(index=False))
 
 print("-" * 60)
 print(f"TOTALE COMPLESSIVO DEL MESE: € {totale_mese:.2f}")
