@@ -3,187 +3,301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Nota Spese</title>
+    <title>Gestione Nota Spese Aziendale</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 15px; background-color: #f4f6f9; color: #333; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h2, h3 { text-align: center; color: #0056b3; margin-top: 0; }
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 15px; }
-        .calculated { background-color: #e9ecef; font-weight: bold; }
-        canvas { border: 2px dashed #0056b3; border-radius: 4px; background: #fff; touch-action: none; display: block; width: 100%; height: 130px; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; margin: 10px; background-color: #f4f6f9; color: #333; }
+        .container { max-width: 850px; margin: auto; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #0056b3; margin-top: 5px; margin-bottom: 15px; font-size: 20px; }
         
-        /* PULSANTI */
-        .btn-main { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-main:hover { background-color: #218838; }
-        .btn-clear { background-color: #6c757d; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; margin-top: 5px; }
-        .btn-save-sig { background-color: #0d6efd; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; margin-top: 5px; }
-        .btn-edit { background-color: #ffc107; color: #212529; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
-        .btn-delete { background-color: #dc3545; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: bold; }
-        .btn-export { background-color: #17a2b8; color: white; padding: 10px; border: none; border-radius: 4px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+        /* NAVIGAZIONE SCHEDE (TABS STILE EXCEL) */
+        .tabs { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 2px solid #0056b3; margin-bottom: 15px; }
+        .tab-button { padding: 8px 12px; background: #e9ecef; border: 1px solid #ccc; border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer; font-weight: bold; font-size: 13px; color: #495057; }
+        .tab-button.active { background: #0056b3; color: white; border-color: #0056b3; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        /* SEZIONE FIRMA E TABELLE */
-        .signature-box { background: #eef6ff; padding: 12px; border-radius: 6px; border: 1px solid #b6d4fe; margin-bottom: 15px; }
-        .signature-preview { max-width: 120px; height: auto; border: 1px solid #ccc; background: #fff; padding: 2px; }
-        .summary-box { background: #e3f2fd; border: 1px solid #90caf9; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 14px; }
+        /* FORMATTAZIONE FORM E SEZIONI */
+        .section-title { background-color: #e9ecef; padding: 6px 10px; border-left: 4px solid #0056b3; font-weight: bold; margin: 15px 0 10px 0; color: #0056b3; font-size: 14px; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; font-weight: bold; margin-bottom: 3px; font-size: 13px; }
+        input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+        .calculated { background-color: #e9ecef; font-weight: bold; }
         
-        /* DATABASE TABLE STYLE */
-        .db-container { overflow-x: auto; margin-top: 15px; border: 1px solid #ddd; border-radius: 6px; }
-        .db-table { width: 100%; border-collapse: collapse; min-width: 600px; font-size: 13px; }
-        .db-table th, .db-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        .db-table th { background-color: #0056b3; color: white; position: sticky; top: 0; }
+        /* FIRMA RIDOTTA E COMPATTA */
+        .signature-box { background: #eef6ff; padding: 8px; border-radius: 6px; border: 1px solid #b6d4fe; margin-bottom: 10px; }
+        canvas { border: 1px dashed #0056b3; border-radius: 4px; background: #fff; touch-action: none; display: block; width: 100%; height: 75px; box-sizing: border-box; }
+        .signature-preview { max-width: 90px; height: auto; border: 1px solid #ccc; background: #fff; padding: 2px; }
+
+        /* PULSANTI */
+        .btn-main { width: 100%; padding: 10px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .btn-main:hover { background-color: #218838; }
+        .btn-clear { background-color: #6c757d; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; margin-top: 3px; }
+        .btn-save-sig { background-color: #0d6efd; color: white; padding: 4px 8px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; margin-top: 3px; }
+        .btn-edit { background-color: #ffc107; color: #212529; padding: 3px 6px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
+        .btn-delete { background-color: #dc3545; color: white; padding: 3px 6px; border: none; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold; }
+        .btn-export { background-color: #17a2b8; color: white; padding: 8px; border: none; border-radius: 4px; font-size: 13px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px; }
+
+        /* TABELLE DATABASE E SINTESI */
+        .db-container { overflow-x: auto; margin-top: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        .db-table { width: 100%; border-collapse: collapse; min-width: 650px; font-size: 12px; }
+        .db-table th, .db-table td { border: 1px solid #ddd; padding: 6px; text-align: center; }
+        .db-table th { background-color: #0056b3; color: white; }
         .db-table tr:nth-child(even) { background-color: #f9f9f9; }
-        .db-table tr:hover { background-color: #f1f1f1; }
         
-        .filter-box { display: flex; gap: 10px; margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+        .filter-box { display: flex; gap: 10px; margin-top: 10px; background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #ddd; }
         .filter-box div { flex: 1; }
+        .summary-box { background: #e3f2fd; border: 1px solid #90caf9; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 13px; }
     </style>
 </head>
 <body>
 
-<div class="container" id="topForm">
-    <h2>Nota Spese Trasferte</h2>
-    
-    <div class="form-group">
-        <label>Nome e Cognome (D):</label>
-        <input type="text" id="nomeCognome" value="LORENZO VALLEGGI">
+<div class="container">
+    <h2>📋 Gestione Nota Spese Aziendale</h2>
+
+    <!-- BARRA DELLE 6 SCHEDE (EXCEL STILE) -->
+    <div class="tabs">
+        <button class="tab-button active" onclick="openTab(event, 'tab1')">1. Calcoli & Registrazione</button>
+        <button class="tab-button" onclick="openTab(event, 'tab2')">2. Nota Spese (Registro)</button>
+        <button class="tab-button" onclick="openTab(event, 'tab3')">3. Scontrini</button>
+        <button class="tab-button" onclick="openTab(event, 'tab4')">4. Telepass</button>
+        <button class="tab-button" onclick="openTab(event, 'tab5')">5. Sintesi Referenti</button>
+        <button class="tab-button" onclick="openTab(event, 'tab6')">6. Sintesi Scontrini</button>
     </div>
 
-    <div class="form-group">
-        <label>Tipologia Ispettore / Residenza (E):</label>
-        <input type="text" id="residenza" value="PISA">
-    </div>
-
-    <!-- FIRMA SALVATA -->
-    <div class="signature-box">
-        <label>Firma del Dichiarante:</label>
-        <div id="sezioneFirmaEsistente" style="display:none;">
-            <small style="color:#28a745; font-weight:bold;">✓ Firma memorizzata nel dispositivo</small>
-            <img id="imgFirmaSalvata" class="signature-preview" alt="Firma Salvata">
-            <button type="button" class="btn-clear" onclick="abilitaModificaFirma()">Cambia Firma</button>
+    <!-- SCHEDA 1: CALCOLI & REGISTRAZIONE -->
+    <div id="tab1" class="tab-content active">
+        <div class="section-title">Anagrafica Ispettore</div>
+        
+        <div class="form-group">
+            <label>Nome e Cognome Ispettore (Libero):</label>
+            <input type="text" id="nomeCognome" placeholder="Inserisci il tuo Nome e Cognome">
         </div>
 
-        <div id="sezioneNuovaFirma">
-            <small style="color:#6c757d;">Firma nel riquadro per salvarla:</small>
-            <canvas id="firmaCanvas" width="400" height="130"></canvas>
-            <button type="button" class="btn-clear" onclick="pulisciFirma()">Cancella</button>
-            <button type="button" class="btn-save-sig" onclick="salvaFirmaInMemoria()">Salva Firma</button>
+        <div class="form-group">
+            <label>Residenza / Sede Operativa:</label>
+            <input type="text" id="residenza" placeholder="Es. PISA, MILANO, ROMA...">
+        </div>
+
+        <!-- SEZIONE FIRMA COMPATTA -->
+        <div class="signature-box">
+            <label>Firma Dichiarante (Formato Ridotto):</label>
+            <div id="sezioneFirmaEsistente" style="display:none;">
+                <small style="color:#28a745; font-weight:bold;">✓ Firma presente</small>
+                <img id="imgFirmaSalvata" class="signature-preview" alt="Firma Salvata">
+                <button type="button" class="btn-clear" onclick="abilitaModificaFirma()">Cambia</button>
+            </div>
+
+            <div id="sezioneNuovaFirma">
+                <canvas id="firmaCanvas" width="400" height="75"></canvas>
+                <button type="button" class="btn-clear" onclick="pulisciFirma()">Cancella</button>
+                <button type="button" class="btn-save-sig" onclick="salvaFirmaInMemoria()">Salva Firma</button>
+            </div>
+        </div>
+
+        <div class="section-title">Dettaglio Trasferta e Spese</div>
+
+        <div class="form-group">
+            <label>Data:</label>
+            <input type="date" id="dataSpesa">
+        </div>
+
+        <div class="form-group">
+            <label>Comune Destinazione:</label>
+            <input type="text" id="comune" placeholder="Es. Bologna">
+        </div>
+
+        <div class="form-group">
+            <label>Coordinatore / Referente di Zona:</label>
+            <select id="coordinatore">
+                <option value="Coordinatore Bruscolini">Coordinatore Bruscolini</option>
+                <option value="Coordinatore Calzetta">Coordinatore Calzetta</option>
+                <option value="Coordinatore Casaburi">Coordinatore Casaburi</option>
+                <option value="Coordinatore Ceniti">Coordinatore Ceniti</option>
+                <option value="Coordinatore Ledda">Coordinatore Ledda</option>
+                <option value="Coordinatore Mazzoleni">Coordinatore Mazzoleni</option>
+                <option value="Coordinatore Migliaccio">Coordinatore Migliaccio</option>
+                <option value="Coordinatore Piccinetti">Coordinatore Piccinetti</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Km Percorsi:</label>
+            <input type="number" id="km" placeholder="0" oninput="calcolaTotali()">
+        </div>
+
+        <div class="form-group">
+            <label>Rimborso Km (€ 0.25/km):</label>
+            <input type="text" id="totKmEuro" class="calculated" readonly value="€ 0.00">
+        </div>
+
+        <div class="form-group">
+            <label>Autostrade / Biglietti Tratta (€):</label>
+            <input type="number" step="0.01" id="autostrade" placeholder="0.00" oninput="calcolaTotali()">
+        </div>
+
+        <div class="form-group">
+            <label>Importo Telepass (€):</label>
+            <input type="number" step="0.01" id="telepass" placeholder="0.00" oninput="calcolaTotali()">
+        </div>
+
+        <div class="form-group">
+            <label>Vitto (€):</label>
+            <input type="number" step="0.01" id="vitto" placeholder="0.00" oninput="calcolaTotali()">
+        </div>
+
+        <div class="form-group">
+            <label>Varie (€):</label>
+            <input type="number" step="0.01" id="varie" placeholder="0.00" oninput="calcolaTotali()">
+        </div>
+
+        <div class="form-group">
+            <label>Allegato Scontrino / Ricevuta (Foto/PDF):</label>
+            <input type="file" id="fotoScontrino" accept="image/*,.pdf">
+        </div>
+
+        <div class="form-group">
+            <label>Allegato Telepass (PDF/Foto):</label>
+            <input type="file" id="fotoTelepass" accept="image/*,.pdf">
+        </div>
+
+        <div class="form-group">
+            <label>TOTALE GIORNALIERO CALCOLATO (€):</label>
+            <input type="text" id="totaleGiorno" class="calculated" style="font-size: 16px; color: #d9534f;" readonly value="€ 0.00">
+        </div>
+
+        <button class="btn-main" id="btnSalva" onclick="salvaSpesa()">💾 Registra Spesa Giornaliera</button>
+    </div>
+
+    <!-- SCHEDA 2: NOTA SPESE (REGISTRO GENERALE) -->
+    <div id="tab2" class="tab-content">
+        <div class="filter-box">
+            <div>
+                <label>Filtra Anno:</label>
+                <select id="filtroAnnoDb" onchange="renderAll()">
+                    <option value="2025">2025</option>
+                    <option value="2026" selected>2026</option>
+                    <option value="2027">2027</option>
+                </select>
+            </div>
+            <div>
+                <label>Filtra Mese:</label>
+                <select id="filtroMeseDb" onchange="renderAll()">
+                    <option value="ALL">-- Tutti i Mesi --</option>
+                    <option value="01">Gennaio</option>
+                    <option value="02">Febbraio</option>
+                    <option value="03">Marzo</option>
+                    <option value="04">Aprile</option>
+                    <option value="05">Maggio</option>
+                    <option value="06">Giugno</option>
+                    <option value="07">Luglio</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Settembre</option>
+                    <option value="10">Ottobre</option>
+                    <option value="11">Novembre</option>
+                    <option value="12">Dicembre</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="btn-export" onclick="esportaExcelCSV()">📥 Esporta Registro (.CSV / Excel)</button>
+
+        <div class="db-container">
+            <table class="db-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Ispettore</th>
+                        <th>Comune</th>
+                        <th>Referente</th>
+                        <th>Km (€)</th>
+                        <th>Autostrade</th>
+                        <th>Telepass</th>
+                        <th>Vitto</th>
+                        <th>Varie</th>
+                        <th>Totale</th>
+                        <th>Azione</th>
+                    </tr>
+                </thead>
+                <tbody id="dbTbody"></tbody>
+            </table>
         </div>
     </div>
 
-    <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
-
-    <div class="form-group">
-        <label>Data:</label>
-        <input type="date" id="dataSpesa">
-    </div>
-
-    <div class="form-group">
-        <label>Comune Destinazione (B):</label>
-        <input type="text" id="comune" placeholder="Inserisci comune">
-    </div>
-
-    <div class="form-group">
-        <label>Coordinatore di Zona (C):</label>
-        <select id="coordinatore">
-            <option value="Coordinatore Bruscolini">Coordinatore Bruscolini</option>
-            <option value="Coordinatore Calzetta">Coordinatore Calzetta</option>
-            <option value="Coordinatore Casaburi">Coordinatore Casaburi</option>
-            <option value="Coordinatore Ceniti">Coordinatore Ceniti</option>
-            <option value="Coordinatore Ledda">Coordinatore Ledda</option>
-            <option value="Coordinatore Mazzoleni">Coordinatore Mazzoleni</option>
-            <option value="Coordinatore Migliaccio">Coordinatore Migliaccio</option>
-            <option value="Coordinatore Piccinetti">Coordinatore Piccinetti</option>
-        </select>
-    </div>
-
-    <div class="form-group">
-        <label>Km Percorsi:</label>
-        <input type="number" id="km" placeholder="0" oninput="calcolaTotali()">
-    </div>
-
-    <div class="form-group">
-        <label>Rimborso Km (€ 0.25/km):</label>
-        <input type="text" id="totKmEuro" class="calculated" readonly value="€ 0.00">
-    </div>
-
-    <div class="form-group">
-        <label>Autostrade (€):</label>
-        <input type="number" step="0.01" id="autostrade" placeholder="0.00" oninput="calcolaTotali()">
-    </div>
-
-    <div class="form-group">
-        <label>Vitto (€):</label>
-        <input type="number" step="0.01" id="vitto" placeholder="0.00" oninput="calcolaTotali()">
-    </div>
-
-    <div class="form-group">
-        <label>Varie (€):</label>
-        <input type="number" step="0.01" id="varie" placeholder="0.00" oninput="calcolaTotali()">
-    </div>
-
-    <div class="form-group">
-        <label>TOTALE GENERALE GIORNO (€):</label>
-        <input type="text" id="totaleGiorno" class="calculated" style="font-size: 18px; color: #d9534f;" readonly value="€ 0.00">
-    </div>
-
-    <button class="btn-main" id="btnSalva" onclick="salvaSpesa()">Salva Registrazione Giorno</button>
-
-    <hr style="border: 0; border-top: 2px solid #0056b3; margin: 25px 0 10px 0;">
-
-    <!-- SEZIONE DATABASE TABELLARE -->
-    <h3>📊 Database Spese Giornaliere</h3>
-    
-    <div class="filter-box">
-        <div>
-            <label>Filtra per Mese:</label>
-            <input type="month" id="filtroMese" onchange="renderDatabase()">
-        </div>
-        <div>
-            <label>Cerca Comune:</label>
-            <input type="text" id="filtroComune" placeholder="Es. Milano..." oninput="renderDatabase()">
+    <!-- SCHEDA 3: SCONTRINI E RICEVUTE -->
+    <div id="tab3" class="tab-content">
+        <div class="section-title">Elenco Scontrini / Ricevute Caricate</div>
+        <div class="db-container">
+            <table class="db-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Ispettore</th>
+                        <th>Vitto (€)</th>
+                        <th>Varie (€)</th>
+                        <th>Stato Allegato Scontrino</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyScontrini"></tbody>
+            </table>
         </div>
     </div>
 
-    <button class="btn-export" onclick="esportaExcelCSV()">📥 Esporta Database per Excel (.CSV)</button>
+    <!-- SCHEDA 4: TELEPASS -->
+    <div id="tab4" class="tab-content">
+        <div class="section-title">Riepilogo Spese e Ricevute Telepass</div>
+        <div class="db-container">
+            <table class="db-table">
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Ispettore</th>
+                        <th>Comune</th>
+                        <th>Importo Telepass (€)</th>
+                        <th>Stato Documento Telepass</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyTelepass"></tbody>
+            </table>
+        </div>
+    </div>
 
-    <div class="db-container">
-        <table class="db-table">
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Comune</th>
-                    <th>Coordinatore</th>
-                    <th>Km (€)</th>
-                    <th>Autostrade</th>
-                    <th>Vitto</th>
-                    <th>Varie</th>
-                    <th>Totale Giorno</th>
-                    <th>Azione</th>
+    <!-- SCHEDA 5: SINTESI REFERENTI -->
+    <div id="tab5" class="tab-content">
+        <div class="section-title">Totali Spese suddivisi per Coordinatore / Referente</div>
+        <div class="db-container">
+            <table class="db-table">
+                <thead>
+                    <tr>
+                        <th>Coordinatore / Referente</th>
+                        <th>Totale Rimborsi Generati (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="tbodyReferenti"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- SCHEDA 6: SINTESI SCONTRINI E CATEGORIE -->
+    <div id="tab6" class="tab-content">
+        <div class="section-title">Sintesi Cumulativa per Tipologia di Spesa</div>
+        <div class="summary-box">
+            <table class="db-table">
+                <tr><td>Totale Rimborsi Km:</td><td id="totCatKm">€ 0.00</td></tr>
+                <tr><td>Totale Autostrade:</td><td id="totCatAutostrade">€ 0.00</td></tr>
+                <tr><td>Totale Telepass:</td><td id="totCatTelepass">€ 0.00</td></tr>
+                <tr><td>Totale Vitto:</td><td id="totCatVitto">€ 0.00</td></tr>
+                <tr><td>Totale Varie:</td><td id="totCatVarie">€ 0.00</td></tr>
+                <tr style="font-weight:bold; background-color:#bbdefb;">
+                    <td>TOTALE COMPLESSIVO GENERALE:</td><td id="totCatGenerale">€ 0.00</td>
                 </tr>
-            </thead>
-            <tbody id="dbTbody">
-                <!-- I dati vengono inseriti in automatico qui -->
-            </tbody>
-        </table>
+            </table>
+        </div>
     </div>
 
-    <!-- RIEPILOGO TOTALE CUMULATIVO -->
-    <div class="summary-box" id="boxTotaleMese">
-        <strong>TOTALE COMPLESSIVO VISUALIZZATO:</strong>
-        <table class="db-table" style="margin-top:8px;">
-            <tr><td>Tot. Rimborso Km:</td><td id="cumKm">€ 0.00</td></tr>
-            <tr><td>Tot. Autostrade:</td><td id="cumAutostrade">€ 0.00</td></tr>
-            <tr><td>Tot. Vitto:</td><td id="cumVitto">€ 0.00</td></tr>
-            <tr><td>Tot. Varie:</td><td id="cumVarie">€ 0.00</td></tr>
-            <tr style="font-weight:bold; background-color:#bbdefb;"><td>TOTALE GENERALE:</td><td id="cumTotale">€ 0.00</td></tr>
-        </table>
-    </div>
 </div>
 
 <script>
-    let elencoSpese = JSON.parse(localStorage.getItem('elencoNotaSpese')) || [];
+    let elencoSpese = JSON.parse(localStorage.getItem('elencoNotaSpese_v2')) || [];
     let editId = null;
 
     const canvas = document.getElementById('firmaCanvas');
@@ -192,10 +306,32 @@
     let firmaIsBlank = true;
 
     window.onload = function() {
+        const OGGI = new Date().toISOString().split('T')[0];
+        document.getElementById('dataSpesa').value = OGGI;
+        
+        // Carica il nome ispettore precedentemente salvato (se disponibile)
+        const savedName = localStorage.getItem('nomeIspettore');
+        if (savedName) document.getElementById('nomeCognome').value = savedName;
+
         caricaFirmaSalvata();
-        renderDatabase();
+        renderAll();
     };
 
+    /* GESTIONE SCHEDE TABS */
+    function openTab(evt, tabName) {
+        let tabcontent = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
+        }
+        let tabbuttons = document.getElementsByClassName("tab-button");
+        for (let i = 0; i < tabbuttons.length; i++) {
+            tabbuttons[i].classList.remove("active");
+        }
+        document.getElementById(tabName).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    /* GESTIONE FIRMA COMPATTA */
     function caricaFirmaSalvata() {
         const firmaSalvata = localStorage.getItem('notaSpeseFirma');
         if (firmaSalvata) {
@@ -210,7 +346,7 @@
 
     function salvaFirmaInMemoria() {
         if (firmaIsBlank) {
-            alert("Disegna prima la firma nel riquadro!");
+            alert("Disegna la firma prima di salvare!");
             return;
         }
         const firmaDataUrl = canvas.toDataURL();
@@ -247,7 +383,7 @@
         if (!isDrawing) return;
         e.preventDefault();
         const pos = getPos(e);
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.lineCap = 'round';
         ctx.strokeStyle = '#00008b';
         ctx.lineTo(pos.x, pos.y);
@@ -260,7 +396,6 @@
     canvas.addEventListener('mousemove', draw);
     canvas.addEventListener('mouseup', stopDrawing);
     canvas.addEventListener('mouseleave', stopDrawing);
-
     canvas.addEventListener('touchstart', startDrawing);
     canvas.addEventListener('touchmove', draw);
     canvas.addEventListener('touchend', stopDrawing);
@@ -270,119 +405,129 @@
         firmaIsBlank = true;
     }
 
+    /* CALCOLI IN TEMPO REALE */
     function calcolaTotali() {
         const km = parseFloat(document.getElementById('km').value) || 0;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
+        const telepass = parseFloat(document.getElementById('telepass').value) || 0;
         const vitto = parseFloat(document.getElementById('vitto').value) || 0;
         const varie = parseFloat(document.getElementById('varie').value) || 0;
 
         const totKm = km * 0.25;
-        const totaleGiorno = totKm + autostrade + vitto + varie;
+        const totaleGiorno = totKm + autostrade + telepass + vitto + varie;
 
         document.getElementById('totKmEuro').value = "€ " + totKm.toFixed(2);
         document.getElementById('totaleGiorno').value = "€ " + totaleGiorno.toFixed(2);
     }
 
+    /* SALVATAGGIO SPESA */
     function salvaSpesa() {
+        const ispettore = document.getElementById('nomeCognome').value.trim();
         const data = document.getElementById('dataSpesa').value;
         const comune = document.getElementById('comune').value;
         const coord = document.getElementById('coordinatore').value;
         const kmVal = parseFloat(document.getElementById('km').value) || 0;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
+        const telepass = parseFloat(document.getElementById('telepass').value) || 0;
         const vitto = parseFloat(document.getElementById('vitto').value) || 0;
         const varie = parseFloat(document.getElementById('varie').value) || 0;
 
-        let firmaUsata = localStorage.getItem('notaSpeseFirma');
-        if (!firmaUsata) {
-            if (!firmaIsBlank) {
-                firmaUsata = canvas.toDataURL();
-                localStorage.setItem('notaSpeseFirma', firmaUsata);
-                caricaFirmaSalvata();
-            } else {
-                alert("Inserisci e salva la firma prima di proseguire!");
-                return;
-            }
-        }
+        const fileScontrino = document.getElementById('fotoScontrino').files.length > 0;
+        const fileTelepass = document.getElementById('fotoTelepass').files.length > 0;
 
-        if(!data || !comune) {
-            alert("Inserisci almeno la data e il comune!");
+        if (!ispettore) {
+            alert("Inserisci il Nome e Cognome dell'Ispettore!");
+            return;
+        }
+        if (!data || !comune) {
+            alert("Inserisci la Data ed il Comune!");
             return;
         }
 
+        // Memorizza il nome per utilizzi futuri
+        localStorage.setItem('nomeIspettore', ispettore);
+
         const spesaOggetto = {
             id: editId !== null ? editId : Date.now(),
+            ispettore: ispettore,
             data: data,
             comune: comune,
             coordinatore: coord,
             km: kmVal,
             autostrade: autostrade,
+            telepass: telepass,
             vitto: vitto,
             varie: varie,
-            firma: firmaUsata
+            hasScontrino: fileScontrino,
+            hasTelepassFile: fileTelepass
         };
 
         if (editId !== null) {
             const index = elencoSpese.findIndex(item => item.id === editId);
             if (index !== -1) elencoSpese[index] = spesaOggetto;
             editId = null;
-            document.getElementById('btnSalva').innerText = "Salva Registrazione Giorno";
+            document.getElementById('btnSalva').innerText = "💾 Registra Spesa Giornaliera";
             document.getElementById('btnSalva').style.backgroundColor = "#28a745";
         } else {
             elencoSpese.push(spesaOggetto);
         }
 
-        // Ordina per data decrescente
         elencoSpese.sort((a, b) => new Date(b.data) - new Date(a.data));
+        localStorage.setItem('elencoNotaSpese_v2', JSON.stringify(elencoSpese));
 
-        localStorage.setItem('elencoNotaSpese', JSON.stringify(elencoSpese));
-        
-        // Reset campi
-        document.getElementById('dataSpesa').value = '';
+        // Reset Campi
         document.getElementById('comune').value = '';
         document.getElementById('km').value = '';
         document.getElementById('autostrade').value = '';
+        document.getElementById('telepass').value = '';
         document.getElementById('vitto').value = '';
         document.getElementById('varie').value = '';
+        document.getElementById('fotoScontrino').value = '';
+        document.getElementById('fotoTelepass').value = '';
         calcolaTotali();
 
-        renderDatabase();
-        alert("Spesa registrata correttamente nel Database!");
+        renderAll();
+        alert("Spesa registrata correttamente!");
     }
 
-    function renderDatabase() {
+    /* RENDERING DI TUTTI I FOGLI / SCHEDE */
+    function renderAll() {
+        renderNotaSpese();
+        renderScontrini();
+        renderTelepass();
+        renderReferenti();
+        renderSintesiCategorie();
+    }
+
+    function getSpeseFiltrate() {
+        const annoSel = document.getElementById('filtroAnnoDb').value;
+        const meseSel = document.getElementById('filtroMeseDb').value;
+        return elencoSpese.filter(spesa => {
+            const parti = spesa.data.split('-');
+            const mAnno = parti[0] === annoSel;
+            const mMese = meseSel === 'ALL' ? true : parti[1] === meseSel;
+            return mAnno && mMese;
+        });
+    }
+
+    function renderNotaSpese() {
         const tbody = document.getElementById('dbTbody');
         tbody.innerHTML = '';
+        const spese = getSpeseFiltrate();
 
-        const filtroMese = document.getElementById('filtroMese').value;
-        const filtroComune = document.getElementById('filtroComune').value.toLowerCase();
-
-        let totKmCum = 0;
-        let totAutostradeCum = 0;
-        let totVittoCum = 0;
-        let totVarieCum = 0;
-
-        const speseFiltrate = elencoSpese.filter(spesa => {
-            const matchMese = filtroMese ? spesa.data.startsWith(filtroMese) : true;
-            const matchComune = filtroComune ? spesa.comune.toLowerCase().includes(filtroComune) : true;
-            return matchMese && matchComune;
-        });
-
-        speseFiltrate.forEach(spesa => {
+        spese.forEach(spesa => {
             const totKmEuro = spesa.km * 0.25;
-            const totGiorno = totKmEuro + spesa.autostrade + spesa.vitto + spesa.varie;
-
-            totKmCum += totKmEuro;
-            totAutostradeCum += spesa.autostrade;
-            totVittoCum += spesa.vitto;
-            totVarieCum += spesa.varie;
+            const totGiorno = totKmEuro + spesa.autostrade + (spesa.telepass || 0) + spesa.vitto + spesa.varie;
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${spesa.data}</strong></td>
+                <td>${spesa.ispettore}</td>
                 <td>${spesa.comune}</td>
                 <td><small>${spesa.coordinatore}</small></td>
-                <td>€ ${totKmEuro.toFixed(2)}<br><small>(${spesa.km} km)</small></td>
+                <td>€ ${totKmEuro.toFixed(2)}</td>
                 <td>€ ${spesa.autostrade.toFixed(2)}</td>
+                <td>€ ${(spesa.telepass||0).toFixed(2)}</td>
                 <td>€ ${spesa.vitto.toFixed(2)}</td>
                 <td>€ ${spesa.varie.toFixed(2)}</td>
                 <td style="font-weight:bold; color:#d9534f;">€ ${totGiorno.toFixed(2)}</td>
@@ -393,64 +538,136 @@
             `;
             tbody.appendChild(tr);
         });
+    }
 
-        const totGeneraleCum = totKmCum + totAutostradeCum + totVittoCum + totVarieCum;
-        document.getElementById('cumKm').innerText = "€ " + totKmCum.toFixed(2);
-        document.getElementById('cumAutostrade').innerText = "€ " + totAutostradeCum.toFixed(2);
-        document.getElementById('cumVitto').innerText = "€ " + totVittoCum.toFixed(2);
-        document.getElementById('cumVarie').innerText = "€ " + totVarieCum.toFixed(2);
-        document.getElementById('cumTotale').innerText = "€ " + totGeneraleCum.toFixed(2);
+    function renderScontrini() {
+        const tbody = document.getElementById('tbodyScontrini');
+        tbody.innerHTML = '';
+        const spese = getSpeseFiltrate().filter(s => s.vitto > 0 || s.varie > 0);
+
+        spese.forEach(spesa => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${spesa.data}</td>
+                <td>${spesa.ispettore}</td>
+                <td>€ ${spesa.vitto.toFixed(2)}</td>
+                <td>€ ${spesa.varie.toFixed(2)}</td>
+                <td>${spesa.hasScontrino ? '🟢 Caricato' : '🔴 Non presente'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderTelepass() {
+        const tbody = document.getElementById('tbodyTelepass');
+        tbody.innerHTML = '';
+        const spese = getSpeseFiltrate().filter(s => (s.telepass || 0) > 0);
+
+        spese.forEach(spesa => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${spesa.data}</td>
+                <td>${spesa.ispettore}</td>
+                <td>${spesa.comune}</td>
+                <td>€ ${spesa.telepass.toFixed(2)}</td>
+                <td>${spesa.hasTelepassFile ? '🟢 Caricato (PDF/Foto)' : '🟡 In attesa'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderReferenti() {
+        const tbody = document.getElementById('tbodyReferenti');
+        tbody.innerHTML = '';
+        const spese = getSpeseFiltrate();
+        const mappa = {};
+
+        spese.forEach(s => {
+            const tot = (s.km * 0.25) + s.autostrade + (s.telepass||0) + s.vitto + s.varie;
+            mappa[s.coordinatore] = (mappa[s.coordinatore] || 0) + tot;
+        });
+
+        for (const [ref, tot] of Object.entries(mappa)) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><strong>${ref}</strong></td><td>€ ${tot.toFixed(2)}</td>`;
+            tbody.appendChild(tr);
+        }
+    }
+
+    function renderSintesiCategorie() {
+        const spese = getSpeseFiltrate();
+        let km = 0, aut = 0, tel = 0, vit = 0, varS = 0;
+
+        spese.forEach(s => {
+            km += (s.km * 0.25);
+            aut += s.autostrade;
+            tel += (s.telepass || 0);
+            vit += s.vitto;
+            varS += s.varie;
+        });
+
+        document.getElementById('totCatKm').innerText = "€ " + km.toFixed(2);
+        document.getElementById('totCatAutostrade').innerText = "€ " + aut.toFixed(2);
+        document.getElementById('totCatTelepass').innerText = "€ " + tel.toFixed(2);
+        document.getElementById('totCatVitto').innerText = "€ " + vit.toFixed(2);
+        document.getElementById('totCatVarie').innerText = "€ " + varS.toFixed(2);
+        document.getElementById('totCatGenerale').innerText = "€ " + (km + aut + tel + vit + varS).toFixed(2);
     }
 
     function modificaSpesa(id) {
         const spesa = elencoSpese.find(item => item.id === id);
         if (!spesa) return;
 
+        document.getElementById('nomeCognome').value = spesa.ispettore;
         document.getElementById('dataSpesa').value = spesa.data;
         document.getElementById('comune').value = spesa.comune;
         document.getElementById('coordinatore').value = spesa.coordinatore;
         document.getElementById('km').value = spesa.km;
         document.getElementById('autostrade').value = spesa.autostrade;
+        document.getElementById('telepass').value = spesa.telepass || 0;
         document.getElementById('vitto').value = spesa.vitto;
         document.getElementById('varie').value = spesa.varie;
 
         calcolaTotali();
-
         editId = id;
+
         const btnSalva = document.getElementById('btnSalva');
-        btnSalva.innerText = "Aggiorna Spesa Selezionata";
+        btnSalva.innerText = "✏️ Aggiorna Spesa Selezionata";
         btnSalva.style.backgroundColor = "#ffc107";
         btnSalva.style.color = "#212529";
 
-        document.getElementById('topForm').scrollIntoView({ behavior: 'smooth' });
+        // Torna alla prima scheda
+        const firstTabBtn = document.querySelectorAll('.tab-button')[0];
+        openTab({ currentTarget: firstTabBtn }, 'tab1');
     }
 
     function eliminaSpesa(id) {
-        if (confirm("Sei sicuro di voler eliminare questa riga dal Database?")) {
+        if (confirm("Sei sicuro di voler eliminare questa spesa?")) {
             elencoSpese = elencoSpese.filter(item => item.id !== id);
-            localStorage.setItem('elencoNotaSpese', JSON.stringify(elencoSpese));
-            renderDatabase();
+            localStorage.setItem('elencoNotaSpese_v2', JSON.stringify(elencoSpese));
+            renderAll();
         }
     }
 
     function esportaExcelCSV() {
-        if (elencoSpese.length === 0) {
+        const spese = getSpeseFiltrate();
+        if (spese.length === 0) {
             alert("Nessun dato da esportare!");
             return;
         }
 
-        let csvContent = "data:text/csv;charset=utf-8,Data;Comune;Coordinatore;Km;Rimborso Km (€);Autostrade (€);Vitto (€);Varie (€);Totale Giorno (€)\n";
+        let csv = "data:text/csv;charset=utf-8,Ispettore;Data;Comune;Referente;Km;Rimborso Km (€);Autostrade (€);Telepass (€);Vitto (€);Varie (€);Totale (€)\n";
 
-        elencoSpese.forEach(spesa => {
-            const totKmEuro = (spesa.km * 0.25).toFixed(2);
-            const totGiorno = (parseFloat(totKmEuro) + spesa.autostrade + spesa.vitto + spesa.varie).toFixed(2);
-            csvContent += `${spesa.data};${spesa.comune};${spesa.coordinatore};${spesa.km};${totKmEuro};${spesa.autostrade};${spesa.vitto};${spesa.varie};${totGiorno}\n`;
+        spese.forEach(s => {
+            const totKm = (s.km * 0.25).toFixed(2);
+            const tot = (parseFloat(totKm) + s.autostrade + (s.telepass||0) + s.vitto + s.varie).toFixed(2);
+            csv += `${s.ispettore};${s.data};${s.comune};${s.coordinatore};${s.km};${totKm};${s.autostrade};${s.telepass||0};${s.vitto};${s.varie};${tot}\n`;
         });
 
-        const encodedUri = encodeURI(csvContent);
+        const encodedUri = encodeURI(csv);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "Database_Nota_Spese.csv");
+        link.setAttribute("download", `Nota_Spese_Registro.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
