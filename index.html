@@ -86,13 +86,8 @@ spese_mese = [
 df_spese = pd.DataFrame(spese_mese)
 df_spese["Data"] = pd.to_datetime(df_spese["Data"])
 
-# 3. Impostazione per mostrare tutte le righe senza tagli
-pd.set_option("display.max_rows", None)
-pd.set_option("display.max_columns", None)
-pd.set_option("display.width", 1000)
-
-# 4. Creazione della SCHEDA RIEPILOGO MENSILE SINTETICA
-totali = df_spese[
+# 3. Calcolo dei Totali Mensili
+totale_mensile = df_spese[
     [
         "Tot. KM",
         "Imp. KM (€)",
@@ -103,48 +98,37 @@ totali = df_spese[
     ]
 ].sum()
 
+# 4. Creazione del DataFrame di Riepilogo Mensile
 df_riepilogo_mensile = pd.DataFrame(
     [
         {
             "Mese": "Settembre 2026",
-            "Tot. KM": totali["Tot. KM"],
-            "Imp. KM (€)": round(totali["Imp. KM (€)"], 2),
-            "Autostrada (€)": round(totali["Autostrada (€)"], 2),
-            "Vitto (€)": round(totali["Vitto (€)"], 2),
-            "Varie (€)": round(totali["Varie (€)"], 2),
-            "TOTALE GENERALE (€)": round(totali["TOTALE (€)"], 2),
+            "Tot. KM": int(totale_mensile["Tot. KM"]),
+            "Imp. KM (€)": round(totale_mensile["Imp. KM (€)"], 2),
+            "Autostrada (€)": round(totale_mensile["Autostrada (€)"], 2),
+            "Vitto (€)": round(totale_mensile["Vitto (€)"], 2),
+            "Varie (€)": round(totale_mensile["Varie (€)"], 2),
+            "TOTALE GENERALE (€)": round(totale_mensile["TOTALE (€)"], 2),
         }
     ]
 )
 
-# 5. Stampa a schermo delle due sezioni
+# 5. Stampa a video delle due schede
 print("=" * 85)
-print("                   SCHEDA 1 - RIEPILOGO MENSILE SINTETICO                ")
+print("SCHEDA 1: RIEPILOGO MENSILE")
 print("=" * 85)
 print(df_riepilogo_mensile.to_string(index=False))
 
 print("\n" + "=" * 85)
-print("                   SCHEDA 2 - REGISTRO DETTAGLIATO MESE                  ")
+print("SCHEDA 2: REGISTRO DETTAGLIATO")
 print("=" * 85)
-colonne_visibili = [
-    "Data",
-    "Coordinatore",
-    "Destinazione",
-    "Tot. KM",
-    "Imp. KM (€)",
-    "Autostrada (€)",
-    "Vitto (€)",
-    "Varie (€)",
-    "TOTALE (€)",
-]
-print(df_spese[colonne_visibili].to_string(index=False))
-print("=" * 85)
+print(df_spese.to_string(index=False))
 
-# 6. Esportazione in file Excel con 2 schede/fogli distinte
-with pd.ExcelWriter("Note_Spese_Settembre_2026.xlsx", engine="openpyxl") as writer:
+# 6. Esportazione in file Excel con 2 schede separate
+with pd.ExcelWriter("Riepilogo_Mensile_Spese.xlsx", engine="openpyxl") as writer:
     df_riepilogo_mensile.to_excel(
         writer, sheet_name="Riepilogo Mensile", index=False
     )
-    df_spese.to_excel(writer, sheet_name="Registro Dettagliato", index=False)
+    df_spese.to_excel(writer, sheet_name="Dettaglio Spese", index=False)
 
-print("\n-> File Excel 'Note_Spese_Settembre_2026.xlsx' creato con successo con la scheda di Riepilogo Mensile e la scheda Dettagliata!")
+print("\n✓ File Excel salvato con successo con le due schede!")
