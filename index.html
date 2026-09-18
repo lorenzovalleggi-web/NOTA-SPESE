@@ -32,7 +32,10 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         table th, table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ddd; }
         table th { background-color: #f8f9fa; color: #2c3e50; font-weight: bold; }
+        table tfoot tr { background-color: #2c3e50; color: #fff; font-weight: bold; }
+        table tfoot td { border-top: 2px solid #1a252f; font-size: 14px; }
         .col-totale { background-color: #eaf2f8; font-weight: bold; }
+        table tfoot .col-totale-foot { background-color: #1abc9c; color: #fff; }
 
         .btn { padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; display: inline-block; margin-top: 10px; }
         .btn-primary { background-color: #2ecc71; color: white; }
@@ -153,7 +156,7 @@
             </form>
         </div>
 
-        <!-- TAB 2: REGISTRO CON PULSANTI MODIFICA ED ELIMINA -->
+        <!-- TAB 2: REGISTRO CON TABELLA COMPLETA E RIGA TOTALE GENERALE -->
         <div id="registro" class="tab-content">
             <h2>Elenco Spese Registrate</h2>
             <table>
@@ -173,6 +176,18 @@
                     </tr>
                 </thead>
                 <tbody id="bodyTabellaSpese"></tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" style="text-align: right;">TOTALE GENERALE:</td>
+                        <td id="totGenKm">0 km</td>
+                        <td id="totGenImpKm">€ 0.00</td>
+                        <td id="totGenAutostrada">€ 0.00</td>
+                        <td id="totGenVitto">€ 0.00</td>
+                        <td id="totGenVarie">€ 0.00</td>
+                        <td id="totGenComplessivo" class="col-totale-foot">€ 0.00</td>
+                        <td></td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
 
@@ -268,7 +283,6 @@
                 };
                 reader.readAsDataURL(file);
             } else {
-                // Se siamo in modifica e non è stato caricato un nuovo file, manteniamo l'allegato precedente
                 let allegatoEsistente = null;
                 if (editId) {
                     const spesaOld = speseRegistrate.find(s => s.id === editId);
@@ -289,7 +303,6 @@
             const totale = rimborsoKm + autostrada + vitto + varie;
 
             if (editId) {
-                // MODIFICA SPESA ESISTENTE
                 const index = speseRegistrate.findIndex(s => s.id === editId);
                 if (index !== -1) {
                     speseRegistrate[index] = {
@@ -309,7 +322,6 @@
                     alert('Spesa aggiornata con successo!');
                 }
             } else {
-                // INSERIMENTO NUOVA SPESA
                 const nuovaSpesa = {
                     id: Date.now().toString(),
                     data: document.getElementById('spesaData').value,
@@ -348,7 +360,6 @@
 
             calcolaTotaleGiorno();
 
-            // Aggiorna Interfaccia in modalità Modifica
             document.getElementById('titoloForm').innerText = "✏️ Modifica Spesa Giornaliera";
             document.getElementById('btnSalvaSpesa').innerText = "💾 Salva Modifiche";
             document.getElementById('btnSalvaSpesa').classList.remove('btn-primary');
@@ -381,31 +392,54 @@
         function renderRegistro() {
             const tbody = document.getElementById('bodyTabellaSpese');
             tbody.innerHTML = '';
+
+            let totKm = 0;
+            let totImpKm = 0;
+            let totAutostrada = 0;
+            let totVitto = 0;
+            let totVarie = 0;
+            let totComplessivo = 0;
+
             if (speseRegistrate.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Nessuna spesa registrata.</td></tr>';
-                return;
+            } else {
+                speseRegistrate.forEach(s => {
+                    totKm += (s.km || 0);
+                    totImpKm += (s.rimborsoKm || 0);
+                    totAutostrada += (s.autostrada || 0);
+                    totVitto += (s.vitto || 0);
+                    totVarie += (s.varie || 0);
+                    totComplessivo += (s.totale || 0);
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${s.data}</td>
+                            <td>${s.coordinatore}</td>
+                            <td>${s.residenzaIspettore || '-'}</td>
+                            <td>${s.comune}</td>
+                            <td>${s.km || 0} km</td>
+                            <td>€ ${(s.rimborsoKm || 0).toFixed(2)}</td>
+                            <td>€ ${(s.autostrada || 0).toFixed(2)}</td>
+                            <td>€ ${(s.vitto || 0).toFixed(2)}</td>
+                            <td>€ ${(s.varie || 0).toFixed(2)}</td>
+                            <td class="col-totale">€ ${(s.totale || 0).toFixed(2)}</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="btn btn-warning" style="padding: 4px 8px; font-size:12px; margin:0;" onclick="modificaSpesa('${s.id}')">Modifica</button>
+                                    <button class="btn btn-danger" style="padding: 4px 8px; font-size:12px; margin:0;" onclick="eliminaSpesa('${s.id}')">Elimina</button>
+                                </div>
+                            </td>
+                        </tr>`;
+                });
             }
-            speseRegistrate.forEach(s => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${s.data}</td>
-                        <td>${s.coordinatore}</td>
-                        <td>${s.residenzaIspettore || '-'}</td>
-                        <td>${s.comune}</td>
-                        <td>${s.km || 0} km</td>
-                        <td>€ ${(s.rimborsoKm || 0).toFixed(2)}</td>
-                        <td>€ ${(s.autostrada || 0).toFixed(2)}</td>
-                        <td>€ ${(s.vitto || 0).toFixed(2)}</td>
-                        <td>€ ${(s.varie || 0).toFixed(2)}</td>
-                        <td class="col-totale">€ ${(s.totale || 0).toFixed(2)}</td>
-                        <td>
-                            <div class="action-btns">
-                                <button class="btn btn-warning" style="padding: 4px 8px; font-size:12px; margin:0;" onclick="modificaSpesa('${s.id}')">Modifica</button>
-                                <button class="btn btn-danger" style="padding: 4px 8px; font-size:12px; margin:0;" onclick="eliminaSpesa('${s.id}')">Elimina</button>
-                            </div>
-                        </td>
-                    </tr>`;
-            });
+
+            // Aggiornamento Riga dei Totali a piè pagina tabella
+            document.getElementById('totGenKm').innerText = `${totKm} km`;
+            document.getElementById('totGenImpKm').innerText = `€ ${totImpKm.toFixed(2)}`;
+            document.getElementById('totGenAutostrada').innerText = `€ ${totAutostrada.toFixed(2)}`;
+            document.getElementById('totGenVitto').innerText = `€ ${totVitto.toFixed(2)}`;
+            document.getElementById('totGenVarie').innerText = `€ ${totVarie.toFixed(2)}`;
+            document.getElementById('totGenComplessivo').innerText = `€ ${totComplessivo.toFixed(2)}`;
         }
 
         function renderScontrini() {
