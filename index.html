@@ -1,135 +1,78 @@
 from datetime import datetime
 import pandas as pd
 
-# 1. Elenco di tutte le trasferte/spese registrate nel mese
-spese_mensili = [
-    # Prima parte del mese (es. Settimana dal 1 al 5 Settembre)
+# 1. Dati di esempio delle spese
+spese_mese = [
     {
-        "Data": "2026-09-01",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "MILANO",
-        "Tot. KM": 120,
-        "Imp. KM (€)": 30.00,
-        "Autostrada (€)": 12.50,
-        "Vitto (€)": 15.00,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 57.50,
+        "Data": "2026-09-02",
+        "Descrizione": "Spesa alimentare Supermercato",
+        "Categoria": "Alimentari",
+        "Importo (€)": 85.50,
     },
     {
-        "Data": "2026-09-03",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "BERGAMO",
-        "Tot. KM": 45,
-        "Imp. KM (€)": 11.25,
-        "Autostrada (€)": 5.40,
-        "Vitto (€)": 12.00,
-        "Varie (€)": 2.00,
-        "TOTALE (€)": 30.65,
-    },
-    # Settimana dal 7 all'11 Settembre
-    {
-        "Data": "2026-09-07",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "BRESCIA",
-        "Tot. KM": 13,
-        "Imp. KM (€)": 3.25,
-        "Autostrada (€)": 34.80,
-        "Vitto (€)": 3.32,
-        "Varie (€)": 1.30,
-        "TOTALE (€)": 42.67,
-    },
-    {
-        "Data": "2026-09-08",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "PUEGNANO DEL GARDA",
-        "Tot. KM": 0,
-        "Imp. KM (€)": 0.00,
-        "Autostrada (€)": 3.10,
-        "Vitto (€)": 3.15,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 6.25,
-    },
-    {
-        "Data": "2026-09-09",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "VERONA",
-        "Tot. KM": 0,
-        "Imp. KM (€)": 0.00,
-        "Autostrada (€)": 7.50,
-        "Vitto (€)": 4.22,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 11.72,
+        "Data": "2026-09-05",
+        "Descrizione": "Rifornimento Carburante",
+        "Categoria": "Trasporti",
+        "Importo (€)": 50.00,
     },
     {
         "Data": "2026-09-10",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "MANTOVA",
-        "Tot. KM": 0,
-        "Imp. KM (€)": 0.00,
-        "Autostrada (€)": 3.10,
-        "Vitto (€)": 6.03,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 9.13,
+        "Descrizione": "Bolletta Elettricità",
+        "Categoria": "Utenze",
+        "Importo (€)": 120.30,
     },
     {
-        "Data": "2026-09-11",
-        "Coordinatore": "Coordinatore Migliaccio",
-        "Destinazione": "ORGIANO",
-        "Tot. KM": 13,
-        "Imp. KM (€)": 3.25,
-        "Autostrada (€)": 25.20,
-        "Vitto (€)": 0.00,
-        "Varie (€)": 0.00,
-        "TOTALE (€)": 28.45,
+        "Data": "2026-09-15",
+        "Descrizione": "Cena Ristorante",
+        "Categoria": "Svago",
+        "Importo (€)": 45.00,
+    },
+    {
+        "Data": "2026-09-18",
+        "Descrizione": "Acquisto Farmacia",
+        "Categoria": "Salute",
+        "Importo (€)": 24.80,
     },
 ]
 
-df = pd.DataFrame(spese_mensili)
-df["Data"] = pd.to_datetime(df["Data"])
+df_spese = pd.DataFrame(spese_mese)
+df_spese["Data"] = pd.to_datetime(df_spese["Data"])
 
-# ==============================================================================
-# RIEPILOGO MENSILE COMPLETO
-# ==============================================================================
-print("=" * 85)
-print("                    RIEPILOGO MENSILE - SETTEMBRE 2026                  ")
-print("=" * 85)
+# 2. Assegnazione del numero della settimana
+df_spese["Settimana"] = df_spese["Data"].dt.isocalendar().week
 
-# Stampa di tutte le operazioni del mese
-colonne_visibili = [
-    "Data",
-    "Coordinatore",
-    "Destinazione",
-    "Tot. KM",
-    "Imp. KM (€)",
-    "Autostrada (€)",
-    "Vitto (€)",
-    "Varie (€)",
-    "TOTALE (€)",
-]
-print(df[colonne_visibili].to_string(index=False))
+# 3. Visualizzazione Registro Dettaglio con la colonna Settimana
+print("=" * 70)
+print("             REGISTRO DETTAGLIO SPESE (CON SETTIMANA)            ")
+print("=" * 70)
+print(df_spese.to_string(index=False))
 
-# Calcolo e stampa del Totale Mensile
-totale_mensile = df[
-    [
-        "Tot. KM",
-        "Imp. KM (€)",
-        "Autostrada (€)",
-        "Vitto (€)",
-        "Varie (€)",
-        "TOTALE (€)",
-    ]
-].sum()
+# 4. Conteggi aggregati per Singola Settimana
+conteggi_settimanali = (
+    df_spese.groupby("Settimana")["Importo (€)"]
+    .agg(
+        N_Operazioni="count",
+        Totale_Euro="sum",
+        Media_Euro="mean",
+        Max_Euro="max",
+    )
+    .reset_index()
+)
 
-print("-" * 85)
-print("TOTALE COMPLESSIVO DEL MESE:")
-print(f"• Totale Chilometri:   {totale_mensile['Tot. KM']} km")
-print(f"• Importo KM:          € {totale_mensile['Imp. KM (€)']:.2f}")
-print(f"• Totale Autostrada:   € {totale_mensile['Autostrada (€)']:.2f}")
-print(f"• Totale Vitto:        € {totale_mensile['Vitto (€)']:.2f}")
-print(f"• Totale Varie:        € {totale_mensile['Varie (€)']:.2f}")
-print("=" * 85)
-print(f"TOTALE GENERALE MESE:   € {totale_mensile['TOTALE (€)']:.2f}")
-print("=" * 85)
+print("\n" + "=" * 70)
+print("                   CONTEGGI PER SINGOLA SETTIMANA               ")
+print("=" * 70)
+print(conteggi_settimanali.to_string(index=False))
 
-# Esportazione rapida in un singolo foglio Excel
-df.to_excel("Riepilogo_Mensile_Spese.xlsx", index=False)
+# 5. Dettaglio incrociato: Settimana x Categoria
+settimana_categoria = (
+    df_spese.groupby(["Settimana", "Categoria"])["Importo (€)"]
+    .sum()
+    .unstack(fill_value=0)
+)
+
+print("\n" + "-" * 70)
+print("             SPESE DELLE SETTIMANE DIVISE PER CATEGORIA          ")
+print("-" * 70)
+print(settimana_categoria)
+print("=" * 70)
