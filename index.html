@@ -1,44 +1,95 @@
 import os
 import tkinter as tk
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
+import pandas as pd
 from PIL import Image, ImageTk
 
+# Variabile globale per salvare il percorso della firma unica
+PERCORSO_FIRMA_UNICA = None
 
-def carica_firma():
-    # 1. Selezione del file tramite finestra di dialogo
-    percorso_file = filedialog.askopenfilename(
-        title="Seleziona la firma",
+
+def carica_firma_unica():
+    global PERCORSO_FIRMA_UNICA
+    percorso = filedialog.askopenfilename(
+        title="Seleziona la tua Firma Unica",
         filetypes=[("Immagini", "*.png *.jpg *.jpeg")],
     )
 
-    if percorso_file:
-        # 2. Apertura e ridimensionamento dell'immagine
-        img = Image.open(percorso_file)
-        img = img.resize((200, 80), Image.Resampling.LANCZOS)  # Ridimensiona
+    if percorso:
+        PERCORSO_FIRMA_UNICA = percorso
 
-        # 3. Conversione per Tkinter
-        firma_tk = ImageTk.PhotoImage(img)
+        # Apertura e anteprima visiva nell'App
+        img = Image.open(percorso)
+        img.thumbnail((200, 80))  # Ridimensionamento proporzionale
+        img_tk = ImageTk.PhotoImage(img)
 
-        # 4. Aggiornamento della Label
-        lbl_firma.config(image=firma_tk)
+        lbl_anteprima_firma.config(image=img_tk, text="")
+        lbl_anteprima_firma.image = (
+            img_tk  # Mantiene il riferimento per non far sparire la foto
+        )
+        messagebox.showinfo(
+            "Firma Registrata", "Firma unica impostata per l'intero mese!"
+        )
 
-        # FONDAMENTALE: Mantiene il riferimento in memoria per evitare che scompara
-        lbl_firma.image = firma_tk
-        lbl_firma.text = ""
+
+def genera_nota_spese():
+    if not PERCORSO_FIRMA_UNICA:
+        messagebox.showwarning(
+            "Attenzione", "Carica prima la tua firma unica in fondo all'app."
+        )
+        return
+
+    messagebox.showinfo(
+        "Successo",
+        f"Nota spese generata correttamente!\nFirma applicata da: {PERCORSO_FIRMA_UNICA}",
+    )
 
 
-# Configurazione finestra base
+# --- INTERFACCIA GRAFICA (GUI) ---
 root = tk.Tk()
-root.title("Gestione Firma")
-root.geometry("400x300")
+root.title("Gestione Nota Spese Mensile")
+root.geometry("500x500")
 
-btn_carica = tk.Button(
-    root, text="Carica Foto Firma", command=carica_firma, padding=10
+# Sezione 1: Nota informativa
+lbl_info = tk.Label(
+    root,
+    text="GESTIONE NOTA SPESE - SETTEMBRE 2026",
+    font=("Arial", 12, "bold"),
 )
-btn_carica.pack(pady=20)
+lbl_info.pack(pady=10)
 
-# Label in cui comparirà l'immagine
-lbl_firma = tk.Label(root, text="[ Nessuna firma caricata ]")
-lbl_firma.pack(pady=10)
+# Sezione 2: Area per le spese (semplificata)
+lbl_spese = tk.Label(root, text="[ Registro spese mensili caricato ]")
+lbl_spese.pack(pady=20)
+
+tk.Frame(root, height=2, bd=1, relief="sunken").pack(
+    fill="x", px=10, pady=10
+)  # Linea divisoria
+
+# Sezione 3: AREA FIRMA UNICA (Sostituisce gli allegati per singola voce)
+lbl_sezione_firma = tk.Label(
+    root, text="FIRMA UNICA COORDINATORE", font=("Arial", 10, "bold")
+)
+lbl_sezione_firma.pack(pady=5)
+
+btn_firma = tk.Button(
+    root, text="📷 Carica Foto Firma Unica", command=carica_firma_unica
+)
+btn_firma.pack(pady=5)
+
+lbl_anteprima_firma = tk.Label(
+    root, text="[ Nessuna firma caricata ]", bg="#e0e0e0", width=30, height=4
+)
+lbl_anteprima_firma.pack(pady=10)
+
+# Sezione 4: Generazione Finale
+btn_genera = tk.Button(
+    root,
+    text="Esporta Nota Spese Mensile",
+    bg="#4CAF50",
+    fg="white",
+    command=genera_nota_spese,
+)
+btn_genera.pack(pady=20)
 
 root.mainloop()
