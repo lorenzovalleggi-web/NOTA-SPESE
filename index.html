@@ -47,6 +47,9 @@
         .filter-box { display: flex; gap: 10px; margin-top: 10px; background: #f8f9fa; padding: 8px; border-radius: 6px; border: 1px solid #ddd; }
         .filter-box div { flex: 1; }
         .summary-box { background: #e3f2fd; border: 1px solid #90caf9; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 13px; }
+
+        /* CONTENITORE DEDICATO CARICAMENTO MULTIPLO SCONTRINI */
+        .scontrini-box { background: #f8f9fa; padding: 12px; border: 1px solid #ced4da; border-radius: 6px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -58,7 +61,7 @@
     <div class="tabs">
         <button class="tab-button active" onclick="openTab(event, 'tab1')">1. Calcoli & Registrazione</button>
         <button class="tab-button" onclick="openTab(event, 'tab2')">2. Nota Spese (Registro)</button>
-        <button class="tab-button" onclick="openTab(event, 'tab3')">3. Scontrini</button>
+        <button class="tab-button" onclick="openTab(event, 'tab3')">3. Scontrini (fino a 50)</button>
         <button class="tab-button" onclick="openTab(event, 'tab4')">4. Telepass</button>
         <button class="tab-button" onclick="openTab(event, 'tab5')">5. Sintesi Referenti</button>
         <button class="tab-button" onclick="openTab(event, 'tab6')">6. Sintesi Scontrini</button>
@@ -70,7 +73,7 @@
         
         <div class="form-group">
             <label>Nome e Cognome Ispettore (Libero):</label>
-            <input type="text" id="nomeCognome" placeholder="Inserisci il tuo Nome e Cognome">
+            <input type="text" id="nomeCognome" placeholder="Inserisci Nome e Cognome">
         </div>
 
         <div class="form-group">
@@ -151,16 +154,6 @@
         </div>
 
         <div class="form-group">
-            <label>Allegato Scontrino / Ricevuta (Foto/PDF):</label>
-            <input type="file" id="fotoScontrino" accept="image/*,.pdf">
-        </div>
-
-        <div class="form-group">
-            <label>Allegato Telepass (PDF/Foto):</label>
-            <input type="file" id="fotoTelepass" accept="image/*,.pdf">
-        </div>
-
-        <div class="form-group">
             <label>TOTALE GIORNALIERO CALCOLATO (€):</label>
             <input type="text" id="totaleGiorno" class="calculated" style="font-size: 16px; color: #d9534f;" readonly value="€ 0.00">
         </div>
@@ -223,18 +216,29 @@
         </div>
     </div>
 
-    <!-- SCHEDA 3: SCONTRINI E RICEVUTE -->
+    <!-- SCHEDA 3: SCONTRINI (INSERIMENTO FINO A 50 FILE) -->
     <div id="tab3" class="tab-content">
-        <div class="section-title">Elenco Scontrini / Ricevute Caricate</div>
+        <div class="section-title">Caricamento Foto / PDF Scontrini (Fino a 50 File)</div>
+        
+        <div class="scontrini-box">
+            <div class="form-group">
+                <label>Seleziona i file degli Scontrini/Ricevute (puoi selezionare fino a 50 file contemporaneamente):</label>
+                <input type="file" id="inputMultiScontrini" accept="image/*,.pdf" multiple onchange="gestisciCaricamentoScontrini()">
+            </div>
+            <small style="color:#6c757d;">💡 Suggerimento: tieni premuto SHIFT o CTRL (su PC) oppure seleziona più elementi dalla galleria del telefono per caricare tutti gli scontrini del mese in una volta sola.</small>
+        </div>
+
+        <div class="section-title">Elenco Scontrini e Ricevute Registrati</div>
         <div class="db-container">
             <table class="db-table">
                 <thead>
                     <tr>
+                        <th>N°</th>
                         <th>Data</th>
                         <th>Ispettore</th>
                         <th>Vitto (€)</th>
                         <th>Varie (€)</th>
-                        <th>Stato Allegato Scontrino</th>
+                        <th>Stato / Nome File Scontrino</th>
                     </tr>
                 </thead>
                 <tbody id="tbodyScontrini"></tbody>
@@ -244,7 +248,16 @@
 
     <!-- SCHEDA 4: TELEPASS -->
     <div id="tab4" class="tab-content">
-        <div class="section-title">Riepilogo Spese e Ricevute Telepass</div>
+        <div class="section-title">Caricamento Documento PDF / Foto Telepass</div>
+        
+        <div class="scontrini-box">
+            <div class="form-group">
+                <label>Carica il PDF/Foto Fattura scaricata dal sito Telepass:</label>
+                <input type="file" id="inputTelepassFile" accept="image/*,.pdf" onchange="gestisciCaricamentoTelepass()">
+            </div>
+        </div>
+
+        <div class="section-title">Riepilogo Spese e Documenti Telepass</div>
         <div class="db-container">
             <table class="db-table">
                 <thead>
@@ -297,7 +310,9 @@
 </div>
 
 <script>
-    let elencoSpese = JSON.parse(localStorage.getItem('elencoNotaSpese_v2')) || [];
+    let elencoSpese = JSON.parse(localStorage.getItem('elencoNotaSpese_v3')) || [];
+    let allegatiScontriniMap = JSON.parse(localStorage.getItem('allegatiScontriniMap')) || {};
+    let allegatoTelepassGlobale = localStorage.getItem('allegatoTelepassGlobale') || '';
     let editId = null;
 
     const canvas = document.getElementById('firmaCanvas');
@@ -309,7 +324,6 @@
         const OGGI = new Date().toISOString().split('T')[0];
         document.getElementById('dataSpesa').value = OGGI;
         
-        // Carica il nome ispettore precedentemente salvato (se disponibile)
         const savedName = localStorage.getItem('nomeIspettore');
         if (savedName) document.getElementById('nomeCognome').value = savedName;
 
@@ -420,7 +434,7 @@
         document.getElementById('totaleGiorno').value = "€ " + totaleGiorno.toFixed(2);
     }
 
-    /* SALVATAGGIO SPESA */
+    /* SALVATAGGIO SPESA (SCHEDA 1 PULITA SENZA CARICAMENTO FILE) */
     function salvaSpesa() {
         const ispettore = document.getElementById('nomeCognome').value.trim();
         const data = document.getElementById('dataSpesa').value;
@@ -432,9 +446,6 @@
         const vitto = parseFloat(document.getElementById('vitto').value) || 0;
         const varie = parseFloat(document.getElementById('varie').value) || 0;
 
-        const fileScontrino = document.getElementById('fotoScontrino').files.length > 0;
-        const fileTelepass = document.getElementById('fotoTelepass').files.length > 0;
-
         if (!ispettore) {
             alert("Inserisci il Nome e Cognome dell'Ispettore!");
             return;
@@ -444,7 +455,6 @@
             return;
         }
 
-        // Memorizza il nome per utilizzi futuri
         localStorage.setItem('nomeIspettore', ispettore);
 
         const spesaOggetto = {
@@ -457,9 +467,7 @@
             autostrade: autostrade,
             telepass: telepass,
             vitto: vitto,
-            varie: varie,
-            hasScontrino: fileScontrino,
-            hasTelepassFile: fileTelepass
+            varie: varie
         };
 
         if (editId !== null) {
@@ -473,7 +481,7 @@
         }
 
         elencoSpese.sort((a, b) => new Date(b.data) - new Date(a.data));
-        localStorage.setItem('elencoNotaSpese_v2', JSON.stringify(elencoSpese));
+        localStorage.setItem('elencoNotaSpese_v3', JSON.stringify(elencoSpese));
 
         // Reset Campi
         document.getElementById('comune').value = '';
@@ -482,15 +490,46 @@
         document.getElementById('telepass').value = '';
         document.getElementById('vitto').value = '';
         document.getElementById('varie').value = '';
-        document.getElementById('fotoScontrino').value = '';
-        document.getElementById('fotoTelepass').value = '';
         calcolaTotali();
 
         renderAll();
         alert("Spesa registrata correttamente!");
     }
 
-    /* RENDERING DI TUTTI I FOGLI / SCHEDE */
+    /* GESTIONE CARICAMENTO MULTIPLO SCONTRINI (PAG 3) */
+    function gestisciCaricamentoScontrini() {
+        const files = document.getElementById('inputMultiScontrini').files;
+        if (files.length === 0) return;
+
+        if (files.length > 50) {
+            alert("Puoi caricare un massimo di 50 file contemporaneamente.");
+            return;
+        }
+
+        let caricati = 0;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            allegatiScontriniMap[`scontrino_${i+1}`] = file.name;
+            caricati++;
+        }
+
+        localStorage.setItem('allegatiScontriniMap', JSON.stringify(allegatiScontriniMap));
+        alert(`Sono stati caricati ${caricati} scontrini/ricevute con successo!`);
+        renderScontrini();
+    }
+
+    /* GESTIONE CARICAMENTO TELEPASS (PAG 4) */
+    function gestisciCaricamentoTelepass() {
+        const fileInput = document.getElementById('inputTelepassFile');
+        if (fileInput.files.length > 0) {
+            allegatoTelepassGlobale = fileInput.files[0].name;
+            localStorage.setItem('allegatoTelepassGlobale', allegatoTelepassGlobale);
+            alert("File Telepass caricato correttamente!");
+            renderTelepass();
+        }
+    }
+
+    /* RENDERING DI TUTTI I FOGLI */
     function renderAll() {
         renderNotaSpese();
         renderScontrini();
@@ -545,14 +584,17 @@
         tbody.innerHTML = '';
         const spese = getSpeseFiltrate().filter(s => s.vitto > 0 || s.varie > 0);
 
-        spese.forEach(spesa => {
+        spese.forEach((spesa, index) => {
+            const nomeAllegato = allegatiScontriniMap[`scontrino_${index+1}`] || '🟢 Scontrino Allegato';
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
+                <td><strong>${index + 1}</strong></td>
                 <td>${spesa.data}</td>
                 <td>${spesa.ispettore}</td>
                 <td>€ ${spesa.vitto.toFixed(2)}</td>
                 <td>€ ${spesa.varie.toFixed(2)}</td>
-                <td>${spesa.hasScontrino ? '🟢 Caricato' : '🔴 Non presente'}</td>
+                <td><small>${nomeAllegato}</small></td>
             `;
             tbody.appendChild(tr);
         });
@@ -564,13 +606,15 @@
         const spese = getSpeseFiltrate().filter(s => (s.telepass || 0) > 0);
 
         spese.forEach(spesa => {
+            const statoDoc = allegatoTelepassGlobale ? `🟢 Caricato (${allegatoTelepassGlobale})` : '🟡 In attesa file dal sito';
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${spesa.data}</td>
                 <td>${spesa.ispettore}</td>
                 <td>${spesa.comune}</td>
                 <td>€ ${spesa.telepass.toFixed(2)}</td>
-                <td>${spesa.hasTelepassFile ? '🟢 Caricato (PDF/Foto)' : '🟡 In attesa'}</td>
+                <td><small>${statoDoc}</small></td>
             `;
             tbody.appendChild(tr);
         });
@@ -636,7 +680,6 @@
         btnSalva.style.backgroundColor = "#ffc107";
         btnSalva.style.color = "#212529";
 
-        // Torna alla prima scheda
         const firstTabBtn = document.querySelectorAll('.tab-button')[0];
         openTab({ currentTarget: firstTabBtn }, 'tab1');
     }
@@ -644,7 +687,7 @@
     function eliminaSpesa(id) {
         if (confirm("Sei sicuro di voler eliminare questa spesa?")) {
             elencoSpese = elencoSpese.filter(item => item.id !== id);
-            localStorage.setItem('elencoNotaSpese_v2', JSON.stringify(elencoSpese));
+            localStorage.setItem('elencoNotaSpese_v3', JSON.stringify(elencoSpese));
             renderAll();
         }
     }
