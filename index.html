@@ -1,7 +1,7 @@
 from datetime import datetime
 import pandas as pd
 
-# 1. Dati di esempio delle spese
+# 1. Definizione della struttura dati per le spese
 spese_mese = [
     {
         "Data": "2026-09-02",
@@ -35,44 +35,29 @@ spese_mese = [
     },
 ]
 
+# 2. Creazione del DataFrame Pandas
 df_spese = pd.DataFrame(spese_mese)
 df_spese["Data"] = pd.to_datetime(df_spese["Data"])
 
-# 2. Assegnazione del numero della settimana
-df_spese["Settimana"] = df_spese["Data"].dt.isocalendar().week
-
-# 3. Visualizzazione Registro Dettaglio con la colonna Settimana
-print("=" * 70)
-print("             REGISTRO DETTAGLIO SPESE (CON SETTIMANA)            ")
-print("=" * 70)
+# 3. Visualizzazione del REGISTRO DETTAGLIATO
+print("=" * 60)
+print("             REGISTRO DETTAGLIATO SPESE MESE            ")
+print("=" * 60)
 print(df_spese.to_string(index=False))
 
-# 4. Conteggi aggregati per Singola Settimana
-conteggi_settimanali = (
-    df_spese.groupby("Settimana")["Importo (€)"]
-    .agg(
-        N_Operazioni="count",
-        Totale_Euro="sum",
-        Media_Euro="mean",
-        Max_Euro="max",
-    )
-    .reset_index()
+# 4. Calcolo Totale Mensile e Riassunto per Categoria
+totale_mese = df_spese["Importo (€)"].sum()
+spese_per_categoria = (
+    df_spese.groupby("Categoria")["Importo (€)"].sum().reset_index()
 )
 
-print("\n" + "=" * 70)
-print("                   CONTEGGI PER SINGOLA SETTIMANA               ")
-print("=" * 70)
-print(conteggi_settimanali.to_string(index=False))
+print("\n" + "=" * 60)
+print("               RIEPILOGO E VISIONE D'INSIEME             ")
+print("=" * 60)
+print(spese_per_categoria.to_string(index=False))
+print("-" * 60)
+print(f"TOTALE COMPLESSIVO DEL MESE: € {totale_mese:.2f}")
+print("=" * 60)
 
-# 5. Dettaglio incrociato: Settimana x Categoria
-settimana_categoria = (
-    df_spese.groupby(["Settimana", "Categoria"])["Importo (€)"]
-    .sum()
-    .unstack(fill_value=0)
-)
-
-print("\n" + "-" * 70)
-print("             SPESE DELLE SETTIMANE DIVISE PER CATEGORIA          ")
-print("-" * 70)
-print(settimana_categoria)
-print("=" * 70)
+# 5. Esportazione opzionale in file Excel / CSV
+# df_spese.to_csv("registro_dettaglio_spese.csv", index=False)
