@@ -3,157 +3,383 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Nota Spese</title>
+    <title>Gestione Nota Spese Aziendale</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { margin: 0; padding: 0; background-color: #f4f6f9; color: #333; }
+        
+        /* BARRA DI NAVIGAZIONE TAB */
+        header { background-color: #2c3e50; color: #fff; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 20px; }
+        
+        nav.tab-nav { background-color: #34495e; display: flex; overflow-x: auto; }
+        nav.tab-nav button { background: none; border: none; outline: none; padding: 14px 20px; color: #ecf0f1; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.3s; white-space: nowrap; }
+        nav.tab-nav button:hover { background-color: #415b76; }
+        nav.tab-nav button.active { background-color: #3498db; color: #fff; border-bottom: 3px solid #fff; }
+        
+        /* CONTENUTO SCHERMATE */
+        .container { padding: 20px; max-width: 1200px; margin: 0 auto; }
+        .tab-content { display: none; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .tab-content.active { display: block; }
+        
+        /* FORM E DATI */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        .form-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .form-row .form-group { flex: 1; min-width: 200px; }
+        
+        /* TABELLE */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        table th, table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        table th { background-color: #f8f9fa; color: #2c3e50; font-weight: bold; }
+        
+        /* CANVAS FIRMA */
+        #canvasFirma { border: 2px dashed #bbb; border-radius: 4px; background: #fafafa; cursor: crosshair; }
+        
+        /* BOTTONI */
+        .btn { padding: 10px 18px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 14px; display: inline-block; margin-top: 5px; }
+        .btn-primary { background-color: #2ecc71; color: white; }
+        .btn-primary:hover { background-color: #27ae60; }
+        .btn-secondary { background-color: #95a5a6; color: white; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+
+        /* SCONTRINI GRID */
         .scontrini-grid { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 15px; }
-        .scontrino-card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; width: 240px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; }
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-        .modal-content { position: relative; background: #fff; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 90%; display: flex; flex-direction: column; align-items: center; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #333; }
+        .scontrino-card { border: 1px solid #ddd; border-radius: 8px; padding: 12px; width: 240px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        /* MODALE ANTEPRIMA */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal-content { background: #fff; padding: 20px; border-radius: 8px; max-width: 90%; max-height: 90%; position: relative; }
     </style>
 </head>
 <body>
 
-    <!-- SEZIONE SCONTRINI -->
-    <div id="tab-scontrini">
-        <h2>Elenco Spese Registrate con Ricevuta</h2>
-        <p>In questa sezione puoi visualizzare ed esaminare tutte le ricevute, foto e PDF allegati alle spese registrate.</p>
-        
-        <div style="margin-bottom: 15px;">
-            <input type="text" id="filtroScontrini" placeholder="Cerca per descrizione o data..." onkeyup="filtrarScontrini()" style="padding: 8px; width: 300px; border-radius: 4px; border: 1px solid #ccc;">
+    <header>
+        <h1>Gestione Nota Spese Aziendale</h1>
+        <span id="dataOggi"></span>
+    </header>
+
+    <!-- BARRA NAVIGAZIONE PAGINE -->
+    <nav class="tab-nav">
+        <button class="tab-btn active" onclick="apriTab('calcoli')">📝 Calcoli & Registrazione</button>
+        <button class="tab-btn" onclick="apriTab('registro')">📊 Nota Spese (Registro)</button>
+        <button class="tab-btn" onclick="apriTab('scontrini')">🧾 Scontrini & Ricevute</button>
+        <button class="tab-btn" onclick="apriTab('telepass')">🛣️ Telepass</button>
+        <button class="tab-btn" onclick="apriTab('referenti')">👥 Sintesi Referenti</button>
+        <button class="tab-btn" onclick="apriTab('sintesi')">📈 Sintesi Categorie</button>
+    </nav>
+
+    <div class="container">
+
+        <!-- PAGINA 1: CALCOLI E REGISTRAZIONE -->
+        <div id="calcoli" class="tab-content active">
+            <h2>Inserisci Nuova Spesa</h2>
+            <form id="formSpesa" onsubmit="salvaSpesa(event)">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Data</label>
+                        <input type="date" id="spesaData" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Referente / Coordinatore</label>
+                        <input type="text" id="spesaReferente" placeholder="Es. Mario Rossi">
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria Spesa</label>
+                        <select id="spesaCategoria">
+                            <option value="Carburante/Km">Chilometri (Auto)</option>
+                            <option value="Autostrada">Autostrada / Telepass</option>
+                            <option value="Vitto">Vitto / Ristorante</option>
+                            <option value="Alloggio">Hotel / Alloggio</option>
+                            <option value="Varie">Altre Spese</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Descrizione / Causale</label>
+                        <input type="text" id="spesaDescrizione" placeholder="Es. Trasferta Milano" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Km Percorsi (se rimborso Km)</label>
+                        <input type="number" id="spesaKm" placeholder="0" oninput="calcolaRimborsoKm()">
+                    </div>
+                    <div class="form-group">
+                        <label>Importo (€)</label>
+                        <input type="number" step="0.01" id="spesaImporto" placeholder="0.00" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Allega Scontrino / Ricevuta (Immagine o PDF)</label>
+                        <input type="file" id="spesaFile" accept="image/*,application/pdf">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Firma Digitale</label>
+                    <canvas id="canvasFirma" width="400" height="120"></canvas><br>
+                    <button type="button" class="btn btn-secondary" onclick="PulisciFirma()">Pulisci Firma</button>
+                </div>
+
+                <button type="submit" class="btn btn-primary">➕ Salva e Registra Spesa</button>
+            </form>
         </div>
 
-        <div id="grigliaScontrini" class="scontrini-grid">
-            <!-- Gli scontrini appariranno qui -->
+        <!-- PAGINA 2: REGISTRO GENERALE -->
+        <div id="registro" class="tab-content">
+            <h2>Elenco Spese Registrate</h2>
+            <button class="btn btn-secondary" onclick="esportaCSV()">📥 Esporta in CSV / Excel</button>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Referente</th>
+                        <th>Categoria</th>
+                        <th>Descrizione</th>
+                        <th>Importo (€)</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyTabellaSpese">
+                    <!-- Righe generate via JS -->
+                </tbody>
+            </table>
         </div>
+
+        <!-- PAGINA 3: SCONTRINI -->
+        <div id="scontrini" class="tab-content">
+            <h2>Galleria Ricevute e Scontrini</h2>
+            <div id="grigliaScontrini" class="scontrini-grid">
+                <!-- Ricevute generate via JS -->
+            </div>
+        </div>
+
+        <!-- PAGINA 4: TELEPASS -->
+        <div id="telepass" class="tab-content">
+            <h2>Spese Autostradali / Telepass</h2>
+            <p>Riepilogo dedicato ai pedaggi autostradali e fatture Telepass.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Tratta / Descrizione</th>
+                        <th>Importo (€)</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyTelepass"></tbody>
+            </table>
+        </div>
+
+        <!-- PAGINA 5: REFERENTI -->
+        <div id="referenti" class="tab-content">
+            <h2>Sintesi Totali per Referente</h2>
+            <div id="sintesiReferentiContenitore"></div>
+        </div>
+
+        <!-- PAGINA 6: SINTESI CATEGORIE -->
+        <div id="sintesi" class="tab-content">
+            <h2>Totali divisi per Categoria</h2>
+            <div id="sintesiCategorieContenitore"></div>
+        </div>
+
     </div>
 
-    <!-- FINASTRA MODALE ANTEPRIMA -->
+    <!-- MODALE PER INGRANDIRE SCONTRINI -->
     <div id="modalAnteprima" class="modal">
         <div class="modal-content">
-            <span class="close-btn" onclick="chiudiModalAnteprima()">&times;</span>
-            <h3 id="modalTitolo" style="margin-top: 0;">Anteprima Ricevuta</h3>
-            <div id="modalContenuto" style="max-width: 100%; max-height: 80vh; overflow: auto; text-align: center;"></div>
+            <span onclick="chiudiModal()" style="position:absolute; top:10px; right:15px; font-size:24px; cursor:pointer;">&times;</span>
+            <div id="modalBody"></div>
         </div>
     </div>
 
-    <!-- CODICE JAVASCRIPT -->
     <script>
-        // Array globale delle spese (sostituisci o integra con i tuoi dati registrati)
+        // Dati salvati in locale
         let speseRegistrate = JSON.parse(localStorage.getItem('speseRegistrate')) || [];
 
-        function renderGalleriaScontrini() {
+        // Navigazione tra le pagine (Tab)
+        function apriTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            if (tabId === 'registro') renderRegistro();
+            if (tabId === 'scontrini') renderScontrini();
+            if (tabId === 'telepass') renderTelepass();
+            if (tabId === 'referenti') renderReferenti();
+            if (tabId === 'sintesi') renderSintesi();
+        }
+
+        // Calcolo automatico Km (es. 0.25€ / km)
+        function calcolaRimborsoKm() {
+            const km = parseFloat(document.getElementById('spesaKm').value) || 0;
+            if (km > 0 && document.getElementById('spesaCategoria').value === 'Carburante/Km') {
+                document.getElementById('spesaImporto').value = (km * 0.25).toFixed(2);
+            }
+        }
+
+        // Gestione Canvas Firma
+        const canvas = document.getElementById('canvasFirma');
+        const ctx = canvas.getContext('2d');
+        let staDisegnando = false;
+
+        canvas.addEventListener('mousedown', () => staDisegnando = true);
+        canvas.addEventListener('mouseup', () => { staDisegnando = false; ctx.beginPath(); });
+        canvas.addEventListener('mousemove', disegna);
+
+        function disegna(e) {
+            if (!staDisegnando) return;
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000';
+            ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+        }
+
+        function PulisciFirma() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Salva Spesa
+        function salvaSpesa(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('spesaFile');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    creaEInserisciSpesa({ data: evt.target.result, tipo: file.type, nomeFile: file.name });
+                };
+                reader.readAsDataURL(file);
+            } else {
+                creaEInserisciSpesa(null);
+            }
+        }
+
+        function creaEInserisciSpesa(allegatoObj) {
+            const nuovaSpesa = {
+                id: Date.now().toString(),
+                data: document.getElementById('spesaData').value,
+                referente: document.getElementById('spesaReferente').value || 'N.D.',
+                categoria: document.getElementById('spesaCategoria').value,
+                descrizione: document.getElementById('spesaDescrizione').value,
+                importo: parseFloat(document.getElementById('spesaImporto').value) || 0,
+                allegato: allegatoObj
+            };
+
+            speseRegistrate.push(nuovaSpesa);
+            localStorage.setItem('speseRegistrate', JSON.stringify(speseRegistrate));
+            
+            alert('Spesa inserita con successo!');
+            document.getElementById('formSpesa').reset();
+            PulisciFirma();
+        }
+
+        // Render Tabelle
+        function renderRegistro() {
+            const tbody = document.getElementById('bodyTabellaSpese');
+            tbody.innerHTML = '';
+            speseRegistrate.forEach(s => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${s.data}</td>
+                        <td>${s.referente}</td>
+                        <td>${s.categoria}</td>
+                        <td>${s.descrizione}</td>
+                        <td>€ ${s.importo.toFixed(2)}</td>
+                        <td><button class="btn btn-danger" style="padding: 4px 8px; font-size:12px;" onclick="eliminaSpesa('${s.id}')">Elimina</button></td>
+                    </tr>`;
+            });
+        }
+
+        function renderScontrini() {
             const griglia = document.getElementById('grigliaScontrini');
-            if (!griglia) return;
-
             griglia.innerHTML = '';
-            const speseConAllegato = speseRegistrate.filter(spesa => spesa.allegato && spesa.allegato.data);
+            const speseConAllegati = speseRegistrate.filter(s => s.allegato);
 
-            if (speseConAllegato.length === 0) {
-                griglia.innerHTML = '<p style="color: #666; font-style: italic;">Nessuna spesa con ricevuta o scontrino allegato.</p>';
+            if (speseConAllegati.length === 0) {
+                griglia.innerHTML = '<p>Nessun allegato o scontrino presente.</p>';
                 return;
             }
 
-            speseConAllegato.forEach((spesa) => {
-                const card = document.createElement('div');
-                card.className = 'scontrino-card';
-
-                const isImage = spesa.allegato.tipo && spesa.allegato.tipo.startsWith('image/');
-                const isPDF = spesa.allegato.tipo === 'application/pdf';
-
-                let previewHTML = '';
-                if (isImage) {
-                    previewHTML = `
-                        <div style="height: 160px; overflow: hidden; border-radius: 4px; background: #eee; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="apriModalAnteprima('${spesa.id}')">
-                            <img src="${spesa.allegato.data}" alt="Scontrino" style="max-width: 100%; max-height: 100%; object-fit: contain;">
-                        </div>`;
-                } else if (isPDF) {
-                    previewHTML = `
-                        <div style="height: 160px; border-radius: 4px; background: #eef4ff; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;" onclick="apriModalAnteprima('${spesa.id}')">
-                            <span style="font-size: 40px;">📄</span>
-                            <span style="font-size: 12px; color: #333; margin-top: 8px;">Documento PDF</span>
-                        </div>`;
-                } else {
-                    previewHTML = `<div style="height: 160px; background: #eee; display: flex; align-items: center; justify-content: center;"><span style="font-size: 12px; color: #666;">File non anteprimibile</span></div>`;
-                }
-
-                card.innerHTML = `
-                    <div>
-                        ${previewHTML}
-                        <div style="margin-top: 10px;">
-                            <strong style="display: block; font-size: 14px; color: #333;">${spesa.descrizione || 'Spesa'}</strong>
-                            <small style="color: #666;">Data: ${spesa.data}</small><br>
-                            <small style="color: #666;">Categoria: ${spesa.categoria || 'N/A'}</small>
-                            <div style="font-size: 16px; font-weight: bold; color: #2c3e50; margin-top: 4px;">€ ${parseFloat(spesa.importo || 0).toFixed(2)}</div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 10px; display: flex; gap: 5px;">
-                        <button onclick="apriModalAnteprima('${spesa.id}')" style="flex: 1; padding: 6px; background: #3498db; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Visualizza</button>
-                        <button onclick="scaricaAllegato('${spesa.id}')" style="padding: 6px; background: #2ecc71; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">💾</button>
-                    </div>
-                `;
-                griglia.appendChild(card);
+            speseConAllegati.forEach(s => {
+                griglia.innerHTML += `
+                    <div class="scontrino-card">
+                        <strong>${s.descrizione}</strong><br>
+                        <small>${s.data} - € ${s.importo.toFixed(2)}</small><br><br>
+                        <button class="btn btn-secondary" onclick="apriAnteprima('${s.id}')">Visualizza Ricevuta</button>
+                    </div>`;
             });
         }
 
-        function apriModalAnteprima(spesaId) {
-            const spesa = speseRegistrate.find(s => s.id === spesaId);
-            if (!spesa || !spesa.allegato) return;
-
-            const modal = document.getElementById('modalAnteprima');
-            const modalTitolo = document.getElementById('modalTitolo');
-            const modalContenuto = document.getElementById('modalContenuto');
-
-            modalTitolo.innerText = `${spesa.descrizione || 'Ricevuta'} - € ${parseFloat(spesa.importo || 0).toFixed(2)}`;
-            modalContenuto.innerHTML = '';
-
-            const isImage = spesa.allegato.tipo && spesa.allegato.tipo.startsWith('image/');
-            const isPDF = spesa.allegato.tipo === 'application/pdf';
-
-            if (isImage) {
-                const img = document.createElement('img');
-                img.src = spesa.allegato.data;
-                img.style.maxWidth = '100%';
-                img.style.maxHeight = '70vh';
-                modalContenuto.appendChild(img);
-            } else if (isPDF) {
-                const iframe = document.createElement('iframe');
-                iframe.src = spesa.allegato.data;
-                iframe.style.width = '80vw';
-                iframe.style.height = '70vh';
-                iframe.style.border = 'none';
-                modalContenuto.appendChild(iframe);
-            }
-            modal.style.display = 'flex';
+        function renderTelepass() {
+            const tbody = document.getElementById('bodyTelepass');
+            tbody.innerHTML = '';
+            speseRegistrate.filter(s => s.categoria === 'Autostrada').forEach(s => {
+                tbody.innerHTML += `<tr><td>${s.data}</td><td>${s.descrizione}</td><td>€ ${s.importo.toFixed(2)}</td></tr>`;
+            });
         }
 
-        function chiudiModalAnteprima() {
+        function renderReferenti() {
+            const cont = document.getElementById('sintesiReferentiContenitore');
+            const refTot = {};
+            speseRegistrate.forEach(s => {
+                refTot[s.referente] = (refTot[s.referente] || 0) + s.importo;
+            });
+            let html = '<ul>';
+            for (let ref in refTot) {
+                html += `<li><strong>${ref}:</strong> € ${refTot[ref].toFixed(2)}</li>`;
+            }
+            html += '</ul>';
+            cont.innerHTML = html;
+        }
+
+        function renderSintesi() {
+            const cont = document.getElementById('sintesiCategorieContenitore');
+            const catTot = {};
+            speseRegistrate.forEach(s => {
+                catTot[s.categoria] = (catTot[s.categoria] || 0) + s.importo;
+            });
+            let html = '<ul>';
+            for (let cat in catTot) {
+                html += `<li><strong>${cat}:</strong> € ${catTot[cat].toFixed(2)}</li>`;
+            }
+            html += '</ul>';
+            cont.innerHTML = html;
+        }
+
+        function eliminaSpesa(id) {
+            speseRegistrate = speseRegistrate.filter(s => s.id !== id);
+            localStorage.setItem('speseRegistrate', JSON.stringify(speseRegistrate));
+            renderRegistro();
+        }
+
+        function apriAnteprima(id) {
+            const spesa = speseRegistrate.find(s => s.id === id);
+            if (!spesa || !spesa.allegato) return;
+            const body = document.getElementById('modalBody');
+            if (spesa.allegato.tipo.startsWith('image/')) {
+                body.innerHTML = `<img src="${spesa.allegato.data}" style="max-width:100%; max-height:75vh;">`;
+            } else {
+                body.innerHTML = `<iframe src="${spesa.allegato.data}" style="width:80vw; height:75vh;"></iframe>`;
+            }
+            document.getElementById('modalAnteprima').style.display = 'flex';
+        }
+
+        function chiudiModal() {
             document.getElementById('modalAnteprima').style.display = 'none';
         }
 
-        function scaricaAllegato(spesaId) {
-            const spesa = speseRegistrate.find(s => s.id === spesaId);
-            if (!spesa || !spesa.allegato) return;
-
-            const link = document.createElement('a');
-            link.href = spesa.allegato.data;
-            link.download = spesa.allegato.nomeFile || `Ricevuta_${spesa.id}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        function filtrarScontrini() {
-            const testo = document.getElementById('filtroScontrini').value.toLowerCase();
-            const cards = document.querySelectorAll('.scontrino-card');
-            cards.forEach(card => {
-                card.style.display = card.innerText.toLowerCase().includes(testo) ? 'flex' : 'none';
-            });
-        }
-
-        // Avvio automatico al caricamento
-        document.addEventListener('DOMContentLoaded', renderGalleriaScontrini);
+        document.getElementById('dataOggi').innerText = new Date().toLocaleDateString('it-IT');
     </script>
 </body>
 </html>
