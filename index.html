@@ -57,7 +57,7 @@
 <div class="container">
     <h2>📋 Gestione Nota Spese Aziendale</h2>
 
-    <!-- BARRA DELLE 6 SCHEDE (EXCEL STILE) -->
+    <!-- BARRA DELLE SCHEDE -->
     <div class="tabs">
         <button class="tab-button active" onclick="openTab(event, 'tab1')">1. Calcoli & Registrazione</button>
         <button class="tab-button" onclick="openTab(event, 'tab2')">2. Nota Spese (Registro)</button>
@@ -67,7 +67,7 @@
         <button class="tab-button" onclick="openTab(event, 'tab6')">6. Sintesi Scontrini</button>
     </div>
 
-    <!-- SCHEDA 1: CALCOLI & REGISTRAZIONE -->
+    <!-- SCHEDA 1: CALCOLI & REGISTRAZIONE (SENZA VOCE TELEPASS) -->
     <div id="tab1" class="tab-content active">
         <div class="section-title">Anagrafica Ispettore</div>
         
@@ -199,7 +199,6 @@
                         <th>Referente</th>
                         <th>Km (€)</th>
                         <th>Autostrade</th>
-                        <th>Telepass</th>
                         <th>Vitto</th>
                         <th>Varie</th>
                         <th>Totale</th>
@@ -211,16 +210,16 @@
         </div>
     </div>
 
-    <!-- SCHEDA 3: SCONTRINI (INSERIMENTO FINO A 50 FILE) -->
+    <!-- SCHEDA 3: SCONTRINI -->
     <div id="tab3" class="tab-content">
         <div class="section-title">Caricamento Foto / PDF Scontrini (Fino a 50 File)</div>
         
         <div class="scontrini-box">
             <div class="form-group">
-                <label>Seleziona i file degli Scontrini/Ricevute (puoi selezionare fino a 50 file contemporaneamente):</label>
+                <label>Seleziona i file degli Scontrini/Ricevute (fino a 50 file):</label>
                 <input type="file" id="inputMultiScontrini" accept="image/*,.pdf" multiple onchange="gestisciCaricamentoScontrini()">
             </div>
-            <small style="color:#6c757d;">💡 Suggerimento: tieni premuto SHIFT o CTRL (su PC) oppure seleziona più elementi dalla galleria del telefono per caricare tutti gli scontrini del mese in una volta sola.</small>
+            <small style="color:#6c757d;">💡 Suggerimento: tieni premuto SHIFT o CTRL (su PC) o seleziona più elementi dalla galleria del telefono.</small>
         </div>
 
         <div class="section-title">Elenco Scontrini e Ricevute Registrati</div>
@@ -252,7 +251,7 @@
             </div>
         </div>
 
-        <div class="section-title">Riepilogo Spese e Documenti Telepass</div>
+        <div class="section-title">Riepilogo Documenti Telepass</div>
         <div class="db-container">
             <table class="db-table">
                 <thead>
@@ -260,7 +259,6 @@
                         <th>Data</th>
                         <th>Ispettore</th>
                         <th>Comune</th>
-                        <th>Importo Telepass (€)</th>
                         <th>Stato Documento Telepass</th>
                     </tr>
                 </thead>
@@ -292,7 +290,6 @@
             <table class="db-table">
                 <tr><td>Totale Rimborsi Km:</td><td id="totCatKm">€ 0.00</td></tr>
                 <tr><td>Totale Autostrade:</td><td id="totCatAutostrade">€ 0.00</td></tr>
-                <tr><td>Totale Telepass:</td><td id="totCatTelepass">€ 0.00</td></tr>
                 <tr><td>Totale Vitto:</td><td id="totCatVitto">€ 0.00</td></tr>
                 <tr><td>Totale Varie:</td><td id="totCatVarie">€ 0.00</td></tr>
                 <tr style="font-weight:bold; background-color:#bbdefb;">
@@ -414,7 +411,7 @@
         firmaIsBlank = true;
     }
 
-    /* CALCOLI IN TEMPO REALE SENZA TELEPASS IN PAG 1 */
+    /* CALCOLI PAGINA 1 (ESCLUSO TELEPASS) */
     function calcolaTotali() {
         const km = parseFloat(document.getElementById('km').value) || 0;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
@@ -458,7 +455,6 @@
             coordinatore: coord,
             km: kmVal,
             autostrade: autostrade,
-            telepass: 0,
             vitto: vitto,
             varie: varie
         };
@@ -548,7 +544,7 @@
 
         spese.forEach(spesa => {
             const totKmEuro = spesa.km * 0.25;
-            const totGiorno = totKmEuro + spesa.autostrade + (spesa.telepass || 0) + spesa.vitto + spesa.varie;
+            const totGiorno = totKmEuro + spesa.autostrade + spesa.vitto + spesa.varie;
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -558,7 +554,6 @@
                 <td><small>${spesa.coordinatore}</small></td>
                 <td>€ ${totKmEuro.toFixed(2)}</td>
                 <td>€ ${spesa.autostrade.toFixed(2)}</td>
-                <td>€ ${(spesa.telepass||0).toFixed(2)}</td>
                 <td>€ ${spesa.vitto.toFixed(2)}</td>
                 <td>€ ${spesa.varie.toFixed(2)}</td>
                 <td style="font-weight:bold; color:#d9534f;">€ ${totGiorno.toFixed(2)}</td>
@@ -595,7 +590,7 @@
     function renderTelepass() {
         const tbody = document.getElementById('tbodyTelepass');
         tbody.innerHTML = '';
-        const spese = getSpeseFiltrate().filter(s => (s.telepass || 0) > 0);
+        const spese = getSpeseFiltrate();
 
         spese.forEach(spesa => {
             const statoDoc = allegatoTelepassGlobale ? `🟢 Caricato (${allegatoTelepassGlobale})` : '🟡 In attesa file dal sito';
@@ -605,7 +600,6 @@
                 <td>${spesa.data}</td>
                 <td>${spesa.ispettore}</td>
                 <td>${spesa.comune}</td>
-                <td>€ ${spesa.telepass.toFixed(2)}</td>
                 <td><small>${statoDoc}</small></td>
             `;
             tbody.appendChild(tr);
@@ -619,7 +613,7 @@
         const mappa = {};
 
         spese.forEach(s => {
-            const tot = (s.km * 0.25) + s.autostrade + (s.telepass||0) + s.vitto + s.varie;
+            const tot = (s.km * 0.25) + s.autostrade + s.vitto + s.varie;
             mappa[s.coordinatore] = (mappa[s.coordinatore] || 0) + tot;
         });
 
@@ -632,22 +626,20 @@
 
     function renderSintesiCategorie() {
         const spese = getSpeseFiltrate();
-        let km = 0, aut = 0, tel = 0, vit = 0, varS = 0;
+        let km = 0, aut = 0, vit = 0, varS = 0;
 
         spese.forEach(s => {
             km += (s.km * 0.25);
             aut += s.autostrade;
-            tel += (s.telepass || 0);
             vit += s.vitto;
             varS += s.varie;
         });
 
         document.getElementById('totCatKm').innerText = "€ " + km.toFixed(2);
         document.getElementById('totCatAutostrade').innerText = "€ " + aut.toFixed(2);
-        document.getElementById('totCatTelepass').innerText = "€ " + tel.toFixed(2);
         document.getElementById('totCatVitto').innerText = "€ " + vit.toFixed(2);
         document.getElementById('totCatVarie').innerText = "€ " + varS.toFixed(2);
-        document.getElementById('totCatGenerale').innerText = "€ " + (km + aut + tel + vit + varS).toFixed(2);
+        document.getElementById('totCatGenerale').innerText = "€ " + (km + aut + vit + varS).toFixed(2);
     }
 
     function modificaSpesa(id) {
@@ -690,12 +682,12 @@
             return;
         }
 
-        let csv = "data:text/csv;charset=utf-8,Ispettore;Data;Comune;Referente;Km;Rimborso Km (€);Autostrade (€);Telepass (€);Vitto (€);Varie (€);Totale (€)\n";
+        let csv = "data:text/csv;charset=utf-8,Ispettore;Data;Comune;Referente;Km;Rimborso Km (€);Autostrade (€);Vitto (€);Varie (€);Totale (€)\n";
 
         spese.forEach(s => {
             const totKm = (s.km * 0.25).toFixed(2);
-            const tot = (parseFloat(totKm) + s.autostrade + (s.telepass||0) + s.vitto + s.varie).toFixed(2);
-            csv += `${s.ispettore};${s.data};${s.comune};${s.coordinatore};${s.km};${totKm};${s.autostrade};${s.telepass||0};${s.vitto};${s.varie};${tot}\n`;
+            const tot = (parseFloat(totKm) + s.autostrade + s.vitto + s.varie).toFixed(2);
+            csv += `${s.ispettore};${s.data};${s.comune};${s.coordinatore};${s.km};${totKm};${s.autostrade};${s.vitto};${s.varie};${tot}\n`;
         });
 
         const encodedUri = encodeURI(csv);
