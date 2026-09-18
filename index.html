@@ -139,11 +139,6 @@
         </div>
 
         <div class="form-group">
-            <label>Importo Telepass (€):</label>
-            <input type="number" step="0.01" id="telepass" placeholder="0.00" oninput="calcolaTotali()">
-        </div>
-
-        <div class="form-group">
             <label>Vitto (€):</label>
             <input type="number" step="0.01" id="vitto" placeholder="0.00" oninput="calcolaTotali()">
         </div>
@@ -310,7 +305,7 @@
 </div>
 
 <script>
-    let elencoSpese = JSON.parse(localStorage.getItem('elencoNotaSpese_v3')) || [];
+    let elencoSpese = JSON.parse(localStorage.getItem('elencoNotaSpese_v4')) || [];
     let allegatiScontriniMap = JSON.parse(localStorage.getItem('allegatiScontriniMap')) || {};
     let allegatoTelepassGlobale = localStorage.getItem('allegatoTelepassGlobale') || '';
     let editId = null;
@@ -419,22 +414,21 @@
         firmaIsBlank = true;
     }
 
-    /* CALCOLI IN TEMPO REALE */
+    /* CALCOLI IN TEMPO REALE SENZA TELEPASS IN PAG 1 */
     function calcolaTotali() {
         const km = parseFloat(document.getElementById('km').value) || 0;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
-        const telepass = parseFloat(document.getElementById('telepass').value) || 0;
         const vitto = parseFloat(document.getElementById('vitto').value) || 0;
         const varie = parseFloat(document.getElementById('varie').value) || 0;
 
         const totKm = km * 0.25;
-        const totaleGiorno = totKm + autostrade + telepass + vitto + varie;
+        const totaleGiorno = totKm + autostrade + vitto + varie;
 
         document.getElementById('totKmEuro').value = "€ " + totKm.toFixed(2);
         document.getElementById('totaleGiorno').value = "€ " + totaleGiorno.toFixed(2);
     }
 
-    /* SALVATAGGIO SPESA (SCHEDA 1 PULITA SENZA CARICAMENTO FILE) */
+    /* SALVATAGGIO SPESA */
     function salvaSpesa() {
         const ispettore = document.getElementById('nomeCognome').value.trim();
         const data = document.getElementById('dataSpesa').value;
@@ -442,7 +436,6 @@
         const coord = document.getElementById('coordinatore').value;
         const kmVal = parseFloat(document.getElementById('km').value) || 0;
         const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
-        const telepass = parseFloat(document.getElementById('telepass').value) || 0;
         const vitto = parseFloat(document.getElementById('vitto').value) || 0;
         const varie = parseFloat(document.getElementById('varie').value) || 0;
 
@@ -465,7 +458,7 @@
             coordinatore: coord,
             km: kmVal,
             autostrade: autostrade,
-            telepass: telepass,
+            telepass: 0,
             vitto: vitto,
             varie: varie
         };
@@ -481,13 +474,12 @@
         }
 
         elencoSpese.sort((a, b) => new Date(b.data) - new Date(a.data));
-        localStorage.setItem('elencoNotaSpese_v3', JSON.stringify(elencoSpese));
+        localStorage.setItem('elencoNotaSpese_v4', JSON.stringify(elencoSpese));
 
         // Reset Campi
         document.getElementById('comune').value = '';
         document.getElementById('km').value = '';
         document.getElementById('autostrade').value = '';
-        document.getElementById('telepass').value = '';
         document.getElementById('vitto').value = '';
         document.getElementById('varie').value = '';
         calcolaTotali();
@@ -668,7 +660,6 @@
         document.getElementById('coordinatore').value = spesa.coordinatore;
         document.getElementById('km').value = spesa.km;
         document.getElementById('autostrade').value = spesa.autostrade;
-        document.getElementById('telepass').value = spesa.telepass || 0;
         document.getElementById('vitto').value = spesa.vitto;
         document.getElementById('varie').value = spesa.varie;
 
@@ -687,7 +678,7 @@
     function eliminaSpesa(id) {
         if (confirm("Sei sicuro di voler eliminare questa spesa?")) {
             elencoSpese = elencoSpese.filter(item => item.id !== id);
-            localStorage.setItem('elencoNotaSpese_v3', JSON.stringify(elencoSpese));
+            localStorage.setItem('elencoNotaSpese_v4', JSON.stringify(elencoSpese));
             renderAll();
         }
     }
