@@ -16,11 +16,13 @@
         .btn-main { width: 100%; padding: 12px; background-color: #28a745; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .btn-main:hover { background-color: #218838; }
         .btn-clear { background-color: #6c757d; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; margin-top: 5px; }
+        .btn-save-sig { background-color: #0d6efd; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 13px; cursor: pointer; margin-top: 5px; }
         .card { background: #f8f9fa; border: 1px solid #cce5ff; padding: 12px; margin-top: 12px; border-radius: 6px; }
         .detail-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; }
         .detail-table th, .detail-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
         .detail-table th { background-color: #e9ecef; }
-        .signature-preview { max-width: 130px; height: auto; border: 1px solid #ccc; margin-top: 5px; display: block; }
+        .signature-box { background: #eef6ff; padding: 12px; border-radius: 6px; border: 1px solid #b6d4fe; margin-bottom: 15px; }
+        .signature-preview { max-width: 140px; height: auto; border: 1px solid #ccc; margin-top: 5px; display: block; background: #fff; padding: 3px; }
         .summary-box { background: #e3f2fd; border: 1px solid #90caf9; padding: 12px; border-radius: 6px; margin-top: 15px; font-size: 14px; }
     </style>
 </head>
@@ -37,6 +39,24 @@
     <div class="form-group">
         <label>Tipologia Ispettore / Residenza (E):</label>
         <input type="text" id="residenza" value="PISA">
+    </div>
+
+    <!-- SEZIONE FIRMA SALVATA -->
+    <div class="signature-box">
+        <label>Firma del Dichiarante:</label>
+        
+        <div id="sezioneFirmaEsistente" style="display:none;">
+            <small style="color:#28a745; font-weight:bold;">✓ Firma memorizzata nel dispositivo</small>
+            <img id="imgFirmaSalvata" class="signature-preview" alt="Firma Salvata">
+            <button type="button" class="btn-clear" onclick="abilitaModificaFirma()">Cambia / Rifai Firma</button>
+        </div>
+
+        <div id="sezioneNuovaFirma">
+            <small style="color:#6c757d;">Firma nel riquadro sottostante (verrà salvata per i prossimi utilizzi):</small>
+            <canvas id="firmaCanvas" width="400" height="130"></canvas>
+            <button type="button" class="btn-clear" onclick="pulisciFirma()">Cancella</button>
+            <button type="button" class="btn-save-sig" onclick="salvaFirmaInMemoria()">Salva Questa Firma</button>
+        </div>
     </div>
 
     <hr style="border: 0; border-top: 1px solid #ccc; margin: 15px 0;">
@@ -96,12 +116,6 @@
     </div>
 
     <div class="form-group">
-        <label>Firma Digitale del Dichiarante:</label>
-        <canvas id="firmaCanvas" width="400" height="150"></canvas>
-        <button type="button" class="btn-clear" onclick="pulisciFirma()">Cancella e Rifai Firma</button>
-    </div>
-
-    <div class="form-group">
         <label>TOTALE GENERALE GIORNO (€):</label>
         <input type="text" id="totaleGiorno" class="calculated" style="font-size: 18px; color: #d9534f;" readonly value="€ 0.00">
     </div>
@@ -111,7 +125,6 @@
     <h3>Riepilogo Dettagliato Registrazioni</h3>
     <div id="listaSpese"></div>
 
-    <!-- RIEPILOGO TOTALE CUMULATIVO PER SINGOLA VOCE -->
     <div class="summary-box" id="boxTotaleMese" style="display:none;">
         <strong>TOTALE COMPLESSIVO CUMULATIVO:</strong>
         <table class="detail-table">
@@ -130,22 +143,44 @@
     let totaleVittoCum = 0;
     let totaleVarieCum = 0;
 
-    function calcolaTotali() {
-        const km = parseFloat(document.getElementById('km').value) || 0;
-        const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
-        const vitto = parseFloat(document.getElementById('vitto').value) || 0;
-        const varie = parseFloat(document.getElementById('varie').value) || 0;
-
-        const totKm = km * 0.25;
-        const totaleGiorno = totKm + autostrade + vitto + varie;
-
-        document.getElementById('totKmEuro').value = "€ " + totKm.toFixed(2);
-        document.getElementById('totaleGiorno').value = "€ " + totaleGiorno.toFixed(2);
-    }
-
+    // GESTIONE FIRMA MEMORIZZATA (LOCALSTORAGE)
     const canvas = document.getElementById('firmaCanvas');
     const ctx = canvas.getContext('2d');
     let isDrawing = false;
+    let firmaIsBlank = true;
+
+    window.onload = function() {
+        caricaFirmaSalvata();
+    };
+
+    function caricaFirmaSalvata() {
+        const firmaSalvata = localStorage.getItem('notaSpeseFirma');
+        if (firmaSalvata) {
+            document.getElementById('imgFirmaSalvata').src = firmaSalvata;
+            document.getElementById('sezioneFirmaEsistente').style.display = 'block';
+            document.getElementById('sezioneNuovaFirma').style.display = 'none';
+        } else {
+            document.getElementById('sezioneFirmaEsistente').style.display = 'none';
+            document.getElementById('sezioneNuovaFirma').style.display = 'block';
+        }
+    }
+
+    function salvaFirmaInMemoria() {
+        if (firmaIsBlank) {
+            alert("Disegna prima la firma nel riquadro!");
+            return;
+        }
+        const firmaDataUrl = canvas.toDataURL();
+        localStorage.setItem('notaSpeseFirma', firmaDataUrl);
+        caricaFirmaSalvata();
+        alert("Firma salvata con successo per i prossimi utilizzi!");
+    }
+
+    function abilitaModificaFirma() {
+        document.getElementById('sezioneFirmaEsistente').style.display = 'none';
+        document.getElementById('sezioneNuovaFirma').style.display = 'block';
+        pulisciFirma();
+    }
 
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -159,6 +194,7 @@
 
     function startDrawing(e) {
         isDrawing = true;
+        firmaIsBlank = false;
         const pos = getPos(e);
         ctx.beginPath();
         ctx.moveTo(pos.x, pos.y);
@@ -188,6 +224,20 @@
 
     function pulisciFirma() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        firmaIsBlank = true;
+    }
+
+    function calcolaTotali() {
+        const km = parseFloat(document.getElementById('km').value) || 0;
+        const autostrade = parseFloat(document.getElementById('autostrade').value) || 0;
+        const vitto = parseFloat(document.getElementById('vitto').value) || 0;
+        const varie = parseFloat(document.getElementById('varie').value) || 0;
+
+        const totKm = km * 0.25;
+        const totaleGiorno = totKm + autostrade + vitto + varie;
+
+        document.getElementById('totKmEuro').value = "€ " + totKm.toFixed(2);
+        document.getElementById('totaleGiorno').value = "€ " + totaleGiorno.toFixed(2);
     }
 
     function salvaSpesa() {
@@ -200,7 +250,19 @@
         const vitto = parseFloat(document.getElementById('vitto').value) || 0;
         const varie = parseFloat(document.getElementById('varie').value) || 0;
         const totGiorno = totKm + autostrade + vitto + varie;
-        const firmaDataUrl = canvas.toDataURL();
+
+        // RECUPERA FIRMA (O DA MEMORIA O DAL CANVAS)
+        let firmaUsata = localStorage.getItem('notaSpeseFirma');
+        if (!firmaUsata) {
+            if (!firmaIsBlank) {
+                firmaUsata = canvas.toDataURL();
+                localStorage.setItem('notaSpeseFirma', firmaUsata);
+                caricaFirmaSalvata();
+            } else {
+                alert("Inserisci e salva la firma prima di proseguire!");
+                return;
+            }
+        }
 
         if(!data || !comune) {
             alert("Inserisci almeno la data e il comune!");
@@ -221,7 +283,7 @@
         document.getElementById('cumTotale').innerText = "€ " + totaleGeneraleCum.toFixed(2);
         document.getElementById('boxTotaleMese').style.display = 'block';
 
-        // CREA SCHEDA CON DETTAGLIO SPECIFICO
+        // AGGIUNGE SCHEDA
         const lista = document.getElementById('listaSpese');
         const card = document.createElement('div');
         card.className = 'card';
@@ -236,7 +298,7 @@
                 <tr style="font-weight:bold; background-color:#e2e3e5;"><td>TOTALE GIORNO</td><td style="color:#d9534f;">€ ${totGiorno.toFixed(2)}</td></tr>
             </table>
             <small style="margin-top:5px; display:block;">Firma allegata:</small>
-            <img src="${firmaDataUrl}" class="signature-preview" alt="Firma">
+            <img src="${firmaUsata}" class="signature-preview" alt="Firma">
         `;
         lista.appendChild(card);
 
