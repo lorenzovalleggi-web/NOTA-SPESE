@@ -88,11 +88,9 @@
                     </div>
                     <div class="form-group">
                         <label>Categoria Spesa</label>
-                        <select id="spesaCategoria" onchange="gestisciCategoria()">
-                            <option value="Carburante/Km">Chilometri (Auto)</option>
-                            <option value="Autostrada">Autostrada / Telepass</option>
-                            <option value="Vitto">Vitto / Ristorante</option>
-                            <option value="Alloggio">Hotel / Alloggio</option>
+                        <select id="spesaCategoria">
+                            <option value="Autostrada">Autostrada</option>
+                            <option value="Vitto">Vitto</option>
                             <option value="Varie">Altre Spese</option>
                         </select>
                     </div>
@@ -102,10 +100,6 @@
                     <div class="form-group">
                         <label>Comune (Luogo di lavoro del giorno)</label>
                         <input type="text" id="spesaComune" placeholder="Es. Rimini, Bologna..." required>
-                    </div>
-                    <div class="form-group">
-                        <label>Km Percorsi (Rimborso: 0,25 € / Km)</label>
-                        <input type="number" id="spesaKm" placeholder="0" oninput="calcolaRimborsoKm()">
                     </div>
                     <div class="form-group">
                         <label>Importo Totale (€)</label>
@@ -204,17 +198,6 @@
             if (tabId === 'sintesi') renderSintesi();
         }
 
-        function calcolaRimborsoKm() {
-            const km = parseFloat(document.getElementById('spesaKm').value) || 0;
-            if (km >= 0 && document.getElementById('spesaCategoria').value === 'Carburante/Km') {
-                document.getElementById('spesaImporto').value = (km * 0.25).toFixed(2);
-            }
-        }
-
-        function gestisciCategoria() {
-            calcolaRimborsoKm();
-        }
-
         function salvaSpesa(e) {
             e.preventDefault();
             const fileInput = document.getElementById('spesaFirmaFile');
@@ -238,7 +221,6 @@
                 coordinatore: document.getElementById('spesaCoordinatore').value,
                 categoria: document.getElementById('spesaCategoria').value,
                 comune: document.getElementById('spesaComune').value,
-                km: parseFloat(document.getElementById('spesaKm').value) || 0,
                 importo: parseFloat(document.getElementById('spesaImporto').value) || 0,
                 firma: firmaObj
             };
