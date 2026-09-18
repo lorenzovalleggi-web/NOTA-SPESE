@@ -16,7 +16,7 @@
         nav.tab-nav button:hover { background-color: #415b76; }
         nav.tab-nav button.active { background-color: #3498db; color: #fff; border-bottom: 3px solid #fff; }
         
-        .container { padding: 20px; max-width: 1300px; margin: 0 auto; }
+        .container { padding: 20px; max-width: 1350px; margin: 0 auto; }
         .tab-content { display: none; background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
         .tab-content.active { display: block; }
         
@@ -24,7 +24,7 @@
         .form-group label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
         .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
         .form-row { display: flex; gap: 15px; flex-wrap: wrap; }
-        .form-row .form-group { flex: 1; min-width: 200px; }
+        .form-row .form-group { flex: 1; min-width: 180px; }
         
         .spese-box { background: #f8f9fa; border: 1px solid #e0e0e0; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
         .spese-box h3 { margin-top: 0; font-size: 16px; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
@@ -93,23 +93,26 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Residenza Ispettore (Luogo di partenza)</label>
-                        <input type="text" id="spesaResidenzaIspettore" placeholder="Es. Bologna, Milano..." required>
+                        <label>Residenza Ispettore</label>
+                        <input type="text" id="spesaResidenzaIspettore" placeholder="Es. Bologna..." required>
                     </div>
                     <div class="form-group">
-                        <label>Comune Destinazione (Luogo di lavoro)</label>
-                        <input type="text" id="spesaComune" placeholder="Es. Rimini, Cesena..." required>
+                        <label>Comune Destinazione</label>
+                        <input type="text" id="spesaComune" placeholder="Es. Rimini..." required>
                     </div>
                 </div>
 
-                <!-- SEZIONE CATEGORIE DI SPESA CON IMPORTI -->
+                <!-- SEZIONE CATEGORIE DI SPESA CON CALCOLO KM / € -->
                 <div class="spese-box">
-                    <h3>Importi per Singola Voce</h3>
+                    <h3>Dettaglio Singole Voci di Spesa</h3>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Km Percorsi (0,25 €/Km)</label>
+                            <label>Tot. KM Percorsi</label>
                             <input type="number" id="spesaKm" placeholder="0" oninput="calcolaTotaleGiorno()">
-                            <small id="rimborsoKmLabel" style="color: #666; font-weight: bold;">Importo Km: € 0.00</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Importo KM (€) <small>(0,25€/KM)</small></label>
+                            <input type="number" id="spesaImportoKm" placeholder="0.00" readonly style="background-color: #e9ecef; font-weight: bold;">
                         </div>
                         <div class="form-group">
                             <label>Importo Autostrada (€)</label>
@@ -130,10 +133,10 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>TOTALE GIORNALIERO (€)</label>
-                        <input type="number" step="0.01" id="spesaTotaleGiorno" placeholder="0.00" readonly style="background-color: #e9ecef; font-weight: bold; font-size: 16px; color: #2c3e50;">
+                        <input type="number" step="0.01" id="spesaTotaleGiorno" placeholder="0.00" readonly style="background-color: #d4edda; font-weight: bold; font-size: 16px; color: #155724;">
                     </div>
                     <div class="form-group">
-                        <label>Allega File / Documento (Immagine o PDF)</label>
+                        <label>Allega Documento (Immagine o PDF)</label>
                         <input type="file" id="spesaFirmaFile" accept="image/*,application/pdf">
                     </div>
                 </div>
@@ -142,7 +145,7 @@
             </form>
         </div>
 
-        <!-- TAB 2: REGISTRO CON VOCI SEPARATE E TOTALE -->
+        <!-- TAB 2: REGISTRO CON KM, IMPORTO KM E ALTRO -->
         <div id="registro" class="tab-content">
             <h2>Elenco Spese Registrate</h2>
             <table>
@@ -152,10 +155,11 @@
                         <th>Coordinatore</th>
                         <th>Residenza</th>
                         <th>Destinazione</th>
-                        <th>Imp. Km (€)</th>
-                        <th>Imp. Autostrada (€)</th>
-                        <th>Imp. Vitto (€)</th>
-                        <th>Imp. Varie (€)</th>
+                        <th>Tot. KM</th>
+                        <th>Imp. KM (€)</th>
+                        <th>Autostrada (€)</th>
+                        <th>Vitto (€)</th>
+                        <th>Varie (€)</th>
                         <th class="col-totale">TOTALE (€)</th>
                         <th>Azioni</th>
                     </tr>
@@ -229,7 +233,7 @@
         function calcolaTotaleGiorno() {
             const km = parseFloat(document.getElementById('spesaKm').value) || 0;
             const rimborsoKm = km * 0.25;
-            document.getElementById('rimborsoKmLabel').innerText = `Importo Km: € ${rimborsoKm.toFixed(2)}`;
+            document.getElementById('spesaImportoKm').value = rimborsoKm.toFixed(2);
 
             const autostrada = parseFloat(document.getElementById('spesaAutostrada').value) || 0;
             const vitto = parseFloat(document.getElementById('spesaVitto').value) || 0;
@@ -283,14 +287,15 @@
             
             alert('Spesa salvata con successo!');
             document.getElementById('formSpesa').reset();
-            document.getElementById('rimborsoKmLabel').innerText = 'Importo Km: € 0.00';
+            document.getElementById('spesaImportoKm').value = '';
+            document.getElementById('spesaTotaleGiorno').value = '';
         }
 
         function renderRegistro() {
             const tbody = document.getElementById('bodyTabellaSpese');
             tbody.innerHTML = '';
             if (speseRegistrate.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Nessuna spesa registrata.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;">Nessuna spesa registrata.</td></tr>';
                 return;
             }
             speseRegistrate.forEach(s => {
@@ -300,7 +305,8 @@
                         <td>${s.coordinatore}</td>
                         <td>${s.residenzaIspettore || '-'}</td>
                         <td>${s.comune}</td>
-                        <td>€ ${(s.rimborsoKm || 0).toFixed(2)} <br><small style="color:#777;">(${s.km} Km)</small></td>
+                        <td>${s.km || 0} km</td>
+                        <td>€ ${(s.rimborsoKm || 0).toFixed(2)}</td>
                         <td>€ ${(s.autostrada || 0).toFixed(2)}</td>
                         <td>€ ${(s.vitto || 0).toFixed(2)}</td>
                         <td>€ ${(s.varie || 0).toFixed(2)}</td>
@@ -360,10 +366,11 @@
 
         function renderSintesi() {
             const cont = document.getElementById('sintesiCategorieContenitore');
-            let totKm = 0, totAutostrada = 0, totVitto = 0, totVarie = 0;
+            let totKmNum = 0, totKmEuro = 0, totAutostrada = 0, totVitto = 0, totVarie = 0;
 
             speseRegistrate.forEach(s => {
-                totKm += (s.rimborsoKm || 0);
+                totKmNum += (s.km || 0);
+                totKmEuro += (s.rimborsoKm || 0);
                 totAutostrada += (s.autostrada || 0);
                 totVitto += (s.vitto || 0);
                 totVarie += (s.varie || 0);
@@ -371,7 +378,8 @@
 
             let html = `
                 <ul>
-                    <li><strong>Totale Rimborso Km:</strong> € ${totKm.toFixed(2)}</li>
+                    <li><strong>Totale KM Percorsi:</strong> ${totKmNum} km</li>
+                    <li><strong>Totale Rimborso KM:</strong> € ${totKmEuro.toFixed(2)}</li>
                     <li><strong>Totale Autostrada:</strong> € ${totAutostrada.toFixed(2)}</li>
                     <li><strong>Totale Vitto:</strong> € ${totVitto.toFixed(2)}</li>
                     <li><strong>Totale Varie:</strong> € ${totVarie.toFixed(2)}</li>
